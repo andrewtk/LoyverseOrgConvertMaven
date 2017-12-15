@@ -53,9 +53,8 @@ public class ReadDB {
                 String topic = rs.getString(2);
                 int id = rs.getInt(1);
                 System.out.println("index is  : " + id + " название: " + topic);
-                String topic = rs.getString(2);
-                int id = rs.getInt(1);
-                System.out.println(id, topic);
+
+
             }
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
