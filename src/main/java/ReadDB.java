@@ -48,7 +48,8 @@ public class ReadDB {
         String queryTopic = "SELECT * FROM topics";
         String queryQu = "SELECT * FROM questions";
         String queryUsers = "SELECT * FROM for_user";
-        readFromFile();
+        String insertTopics = "";
+        List listOfTopic = readFromFile("D:\\Tempdir\\topic.csv");
 /*
         try {
             con = DriverManager.getConnection(url2, user, password);
@@ -75,23 +76,20 @@ public class ReadDB {
         }*/
     }
 
-    private static void readFromFile() throws IOException {
-        List<List<String>> listOfItems = Files.lines(Paths.get("d:\\TempDir\\topic.csv"), StandardCharsets.UTF_8).map(ReadDB::parseLine).collect(toList());
-
-
+    private static List readFromFile(String fileName) throws IOException {
+        List<List<String>> listOfItems = Files.lines(Paths.get(fileName), StandardCharsets.UTF_8).map(ReadDB::parseLine).collect(toList());
+        return listOfItems;
     }
 
     private static List<String> parseLine(String line) {
         List list = new ArrayList();
         String[] subStr;
         String delimeter = ","; // Разделитель
-
         subStr = line.split(delimeter);
         // Вывод результата на экран
         for (String str : subStr) {
             list.add(str);
         }
-
         return list;
 
     }
