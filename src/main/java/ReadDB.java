@@ -2,8 +2,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public class ReadDB {
 
@@ -11,8 +18,8 @@ public class ReadDB {
     /**
      * Simple Java program to connect to MySQL database running on localhost and
      * running SELECT and INSERT query to retrieve and add data.
-     *
-     * @author Javin Paul
+     * <p>
+     * author Javin Paul
      */
 
 
@@ -29,32 +36,28 @@ public class ReadDB {
     private static Statement stmt;
     private static ResultSet rs;
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         //saveDataFromLorg1();
         loadDataToLorg2();
 
     }
-//==========================================================================
-    private static void loadDataToLorg2() {
+
+    //==========================================================================
+    private static void loadDataToLorg2() throws IOException {
 
         String queryTopic = "SELECT * FROM topics";
         String queryQu = "SELECT * FROM questions";
         String queryUsers = "SELECT * FROM for_user";
-
+        readFromFile();
+/*
         try {
-            // opening database connection to MySQL server
             con = DriverManager.getConnection(url2, user, password);
-            // getting Statement object to execute query
             stmt = con.createStatement();
-            // executing SELECT query
             rs = stmt.executeQuery(queryTopic);
-
             while (rs.next()) {
                 String topic = rs.getString(2);
                 int id = rs.getInt(1);
                 System.out.println("index is  : " + id + " название: " + topic);
-
-
             }
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
@@ -62,16 +65,39 @@ public class ReadDB {
             //close connection ,stmt and resultset here
             try {
                 con.close();
-            } catch (SQLException se) { /*can't do anything */ }
+            } catch (SQLException se) { *//*can't do anything *//* }
             try {
                 stmt.close();
-            } catch (SQLException se) { /*can't do anything */ }
+            } catch (SQLException se) { *//*can't do anything *//* }
             try {
                 rs.close();
-            } catch (SQLException se) { /*can't do anything */ }
-        }
+            } catch (SQLException se) { *//*can't do anything *//* }
+        }*/
     }
-//==============================================================================================
+
+    private static void readFromFile() throws IOException {
+        List<List<String>> listOfItems = Files.lines(Paths.get("d:\\TempDir\\topic.csv"), StandardCharsets.UTF_8).map(ReadDB::parseLine).collect(toList());
+
+
+    }
+
+    private static List<String> parseLine(String line) {
+        List list = new ArrayList();
+        String[] subStr;
+        String delimeter = ","; // Разделитель
+
+        subStr = line.split(delimeter);
+        // Вывод результата на экран
+        for (String str : subStr) {
+            list.add(str);
+        }
+
+        return list;
+
+    }
+
+
+    //==============================================================================================
     private static void saveDataFromLorg1() {
         String queryTopic = "SELECT id,topic FROM qa_topics";
         String queryPost = "SELECT " +
@@ -233,7 +259,7 @@ public class ReadDB {
         }
         //определяем вопрос, ответ или комментарий
         String quAnCm = rs.getString(2);
-        String fileNameQAC = "";
+        String fileNameQAC;
         if (quAnCm.contains("Q")) {
             fileNameQAC = "questions";
 
