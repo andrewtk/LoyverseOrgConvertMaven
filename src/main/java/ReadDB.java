@@ -28,7 +28,7 @@ public class ReadDB {
     private static final String user = "root";
     private static final String password = "root";
 
-    private static final String url2 = "jdbc:mysql://localhost:3306/newLogrExtra";
+    private static final String url2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
 
 
     // JDBC variables for opening and managing connection
@@ -50,15 +50,24 @@ public class ReadDB {
         String queryUsers = "SELECT * FROM for_user";
         String insertTopics = "";
         List listOfTopic = readFromFile("D:\\Tempdir\\topic.csv");
-/*
+
+
         try {
+            System.out.println("Connecting to a selected database...");
             con = DriverManager.getConnection(url2, user, password);
+            System.out.println("Connected database successfully...");
             stmt = con.createStatement();
+
+            String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
+                    "VALUES ('testTopic','проверяем как вставка происходит','bla-bla','default_topic.jpeg', 'eng')";
+            stmt.executeUpdate(insertSQLTopic);
             rs = stmt.executeQuery(queryTopic);
+
             while (rs.next()) {
                 String topic = rs.getString(2);
                 int id = rs.getInt(1);
                 System.out.println("index is  : " + id + " название: " + topic);
+
             }
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
@@ -66,14 +75,14 @@ public class ReadDB {
             //close connection ,stmt and resultset here
             try {
                 con.close();
-            } catch (SQLException se) { *//*can't do anything *//* }
+            } catch (SQLException se) { /*can't do anything*/  }
             try {
                 stmt.close();
-            } catch (SQLException se) { *//*can't do anything *//* }
+            } catch (SQLException se) { /*can't do anything*/  }
             try {
                 rs.close();
-            } catch (SQLException se) { *//*can't do anything *//* }
-        }*/
+            } catch (SQLException se) { /*can't do anything*/  }
+        }
     }
 
     private static List readFromFile(String fileName) throws IOException {
