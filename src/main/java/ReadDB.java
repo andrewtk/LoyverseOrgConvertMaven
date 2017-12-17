@@ -1,3 +1,5 @@
+import com.github.slugify.Slugify;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -49,7 +51,8 @@ public class ReadDB {
         String queryQu = "SELECT * FROM questions";
         String queryUsers = "SELECT * FROM for_user";
         String insertTopics = "";
-        List listOfTopic = readFromFile("D:\\Tempdir\\topic.csv");
+        List<List<String>> listOfTopic = readFromFile("D:\\Tempdir\\topic.csv");
+        listOfTopic.forEach(System.out::println);
 
 
         try {
@@ -58,9 +61,15 @@ public class ReadDB {
             System.out.println("Connected database successfully...");
             stmt = con.createStatement();
 
-            String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
-                    "VALUES ('testTopic','проверяем как вставка происходит','bla-bla','default_topic.jpeg', 'eng')";
-            stmt.executeUpdate(insertSQLTopic);
+            Slugify slg = new Slugify();
+            for (List<String> line : listOfTopic) {
+                String slug = slg.slugify(line.get(1));
+                String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
+                        "VALUES ('" + line.get(1) + "','short explanation about topic','" + slug + "','default_topic.jpeg', 'eng')";
+                stmt.executeUpdate(insertSQLTopic);
+
+            }
+
             rs = stmt.executeQuery(queryTopic);
 
             while (rs.next()) {
@@ -75,17 +84,17 @@ public class ReadDB {
             //close connection ,stmt and resultset here
             try {
                 con.close();
-            } catch (SQLException se) { /*can't do anything*/  }
+            } catch (SQLException se) { /*can't do anything*/ }
             try {
                 stmt.close();
-            } catch (SQLException se) { /*can't do anything*/  }
+            } catch (SQLException se) { /*can't do anything*/ }
             try {
                 rs.close();
-            } catch (SQLException se) { /*can't do anything*/  }
+            } catch (SQLException se) { /*can't do anything*/ }
         }
     }
 
-    private static List readFromFile(String fileName) throws IOException {
+    private static List<List<String>> readFromFile(String fileName) throws IOException {
         List<List<String>> listOfItems = Files.lines(Paths.get(fileName), StandardCharsets.UTF_8).map(ReadDB::parseLine).collect(toList());
         return listOfItems;
     }
@@ -349,3 +358,6 @@ public class ReadDB {
         }
     }
 }
+
+
+
