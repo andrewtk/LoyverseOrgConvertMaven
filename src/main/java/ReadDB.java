@@ -290,43 +290,14 @@ public class ReadDB {
 // вставка комментариев
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             List<List<String>> list_Old_New_Id_A = readFromFile(fileNameOfAnswerRel, false);
-            insertCommentsInNewDB(slugInc, queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A);
+            insertCommentsInNewDB(queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
 
             InsertTopics.insertTopics(queryTopic, listOfTopic,fileNameOfTopicRel);
-            // for (List<String> line : listOfTopic) {
-            //     String slug = slg.slugify(line.get(1));// слаг для топика
-            //     String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
-            //             "VALUES (?,'short explanation about topic',?,'default_topic.jpeg', 'eng')";
-            //     //stmt.executeUpdate(insertSQLTopic);
-            //     PreparedStatement statement = con.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
-            //     statement.setString(1, line.get(1));
-            //     statement.setString(2, slug);
-            //     int affectedRow = statement.executeUpdate();
-            //     if (affectedRow == 0) {
-            //         System.out.println("Создание строки не удалось - topic " + line.get(1));
-            //     } else {
-            //         receiveIDinNewDB(line, statement);
-            //         //saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfAnswerRel);
-            //     }
-            //     //прогресс бар
-            //     try {
-            //         String data = "\r" + "|-+".charAt(slugInc % "|-+".length()) + " " + slugInc;
-            //         System.out.write(data.getBytes());
-            //     } catch (IOException e) {
-            //         e.printStackTrace();
-            //     }
-            //     receiveIDinNewDB(line, statement);
-            // }
-            // rs = stmt.executeQuery(queryTopic);
-            // while (rs.next()) {
-            //     String topic = rs.getString(2);
-            //     int id = rs.getInt(1);
-            //     System.out.println("index is  : " + id + " название: " + topic);
-            // }
+
 //////////////////////////////////////////////////////////// конец блока вставок в базу ///////////////////////////
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
@@ -357,15 +328,15 @@ public class ReadDB {
         }
     }
 
-    private static void insertCommentsInNewDB(int slugInc, String queryIdOwner,
+    private static void insertCommentsInNewDB(String queryIdOwner,
                                               List<List<String>> listOfComments,
                                               List<List<String>> listOfOldAndNewQuestionsId,
                                               List<List<String>> listOfOldAndNewAnsId) throws SQLException {
         System.out.println("Start to convert the comments");
-        String anim = "|-/\\";
-        slugInc = 0;
+        String anim = "|/-\\";
+        int myCounter = 0;
         for (List<String> line : listOfComments) {
-            slugInc++;
+            myCounter++;
             String userIdFromFOS_user = line.get(11);
             String currentQueryIdOwner = queryIdOwner + userIdFromFOS_user;
             rs = stmt.executeQuery(currentQueryIdOwner);
@@ -406,7 +377,7 @@ public class ReadDB {
             statement.setString(6, updated);
             int affectedRow = statement.executeUpdate();
             if (affectedRow == 0) {
-                String data = "\r" + anim.charAt(slugInc % anim.length()) + " " + slugInc;
+                String data = "\r" + anim.charAt(myCounter % anim.length()) + " не была добавлена строка " + myCounter;
                 try {
                     System.out.write(data.getBytes());
                 } catch (IOException e) {
@@ -415,17 +386,8 @@ public class ReadDB {
                 //System.out.println("\nСоздание строки не удалось - userId " + userId);
             } else {
                 receiveIDinNewDB(line, statement);
-
             }
-            try {
-                String data = "\r" + anim.charAt(slugInc % anim.length()) + " " + slugInc;
-                System.out.write(data.getBytes());
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            progressBar(myCounter," comment");
         }
     }
 
