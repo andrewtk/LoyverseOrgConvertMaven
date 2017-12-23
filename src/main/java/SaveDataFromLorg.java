@@ -122,7 +122,7 @@ public class SaveDataFromLorg {
         }
     }
 
-    private static void progressBar(int i) {
+    public static void progressBar(int i) {
         try {
             String data = "\r" + "|/-\\".charAt(i % "|/-\\".length()) + " записываем данные в файл... " ;
             System.out.write(data.getBytes());
@@ -168,11 +168,6 @@ public class SaveDataFromLorg {
                 }
             }
             line = line + "\n";
-            // запись всей строки в файл
-            /*byte[] lineCoded = line.getBytes("UTF-8");
-            String encoded = Base64.getEncoder().encodeToString(lineCoded);
-            byte[] decoded = Base64.getDecoder().decode(encoded);
-            */
             writer.write(line);
             writer.flush();
             writer.close();

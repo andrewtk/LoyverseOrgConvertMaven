@@ -18,39 +18,43 @@ public class InsertTopics {
     private static Statement stmt;
     private static ResultSet rs;
 
+
+
     public static void main(String args[]) throws IOException, SQLException {
+        String queryTopic = " ";
         List<List<String>> listOfTopic = ReadDB.readFromFile("D:\\Tempdir\\topic.csv", false);
-        insertTopics("testquery",listOfTopic);
+        String fileNameOfTopicRel = "D:\\Tempdir\\" + "oldnewIdTopic";
+        insertTopics(queryTopic,listOfTopic,fileNameOfTopicRel);
     }
 
-    private static void insertTopics(String queryTopic, List<List<String>> listOfTopic) throws SQLException {
+    /**
+     * метод вставки тем в новую базу со связками
+     * @param queryTopic SQL запрос в старую базу в таблицу топиков
+     * @param listOfTopic список тем в массиве
+     * @param fileNameOfTopicRel название файла в котором храниться база соответсвия
+     * @throws SQLException
+     */
+
+    public static void insertTopics(String queryTopic, List<List<String>> listOfTopic, String fileNameOfTopicRel) throws SQLException {
         Slugify slg = new Slugify();
         int slugInc=0;
         for (List<String> line : listOfTopic) {
-            String slug = slg.slugify(line.get(1));// слаг для топика
             String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
-                    "VALUES (?,'short explanation about topic',?,'default_topic.jpeg', 'eng')";
-            //stmt.executeUpdate(insertSQLTopic);
+                    "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'eng')";
             PreparedStatement statement = con.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, line.get(1));
+            String slug = slg.slugify(line.get(1));// слаг для топика
             statement.setString(2, slug);
+
             int affectedRow = statement.executeUpdate();
             if (affectedRow == 0) {
                 System.out.println("Создание строки не удалось - topic " + line.get(1));
             } else {
                 ReadDB.receiveIDinNewDB(line, statement);
-                //saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfAnswerRel);
+                ReadDB.saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfTopicRel);
             }
-
-            try {
-                String data = "\r" + "|-+".charAt(slugInc % "|-+".length()) + " " + slugInc++;
-                System.out.write(data.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+            ReadDB.progressBar(slugInc++,slug);
             ReadDB.receiveIDinNewDB(line, statement);
-
         }
         rs = stmt.executeQuery(queryTopic);
         while (rs.next()) {

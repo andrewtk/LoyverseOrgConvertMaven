@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
+
 import static java.util.stream.Collectors.toList;
 
 public class ReadDB {
@@ -30,71 +31,57 @@ public class ReadDB {
         //saveDataFromLorg1();
         SaveDataFromLorg.saveDataFromLorg1();
         loadDataToLorg2();
-
     }
 
-    //==========================================================================
+//====================================================================================================================
     private static void loadDataToLorg2() throws IOException {
-
-        String queryTopic = "SELECT * FROM topics";
-        String queryQu = "SELECT * FROM questions";
-        String queryUsers = "SELECT * FROM for_user Where sellerid is not null";
-        String insertTopics = "";
-        int slugInc = 0;
-        String queryIdOwner = "SELECT fos_user.id " +
-                " FROM fos_user " +
-                " WHERE fos_user.userid = ";
-
         List<List<String>> listOfTopic = readFromFile("D:\\Tempdir\\topic.csv", false);
         List<List<String>> listOfUsers = readFromFile("D:\\Tempdir\\users.csv", false);
         List<List<String>> listOfQuestions = readFromFile("D:\\Tempdir\\questions.csv", true);
         List<List<String>> listOfAnswers = readFromFile("D:\\Tempdir\\answers.csv", true);
         List<List<String>> listOfComments = readFromFile("D:\\Tempdir\\comments.csv", true);
+
         String fileNameOfQuestionRel = "D:\\Tempdir\\" + "oldnewId";
         String fileNameOfAnswerRel = "D:\\Tempdir\\" + "oldnewIdAnsw";
+        String fileNameOfTopicRel = "D:\\Tempdir\\" + "oldnewIdTopic";
 
-//вставляем юзеров из таблицы в новую базу///////////////////////////////////////////////////////////////////////////
+        String queryTopic = "SELECT * FROM topics";
+        String queryQu = "SELECT * FROM questions";
+        String queryUsers = "SELECT * FROM for_user Where sellerid is not null";
+        String insertTopics = "";
+        String insertSQLUsers = "INSERT  INTO fos_user (username, username_canonical,email, email_canonical," +
+                "enabled, last_login, userId,owner_id, localize, slug, segment, status, cropic, roles, is_owner, pasword)" +
+                "VALUES (" +
+                /*1  username*/  "?," + //1
+                /*2  usm_cncl*/  "?," + //2
+                /*3  email*/     "?," + //3
+                /*4  eml_cnncl*/ "?," + //4
+                /*5  enabled*/   "?," + //5
+                /*6  last_lgn*/  "?," + //6
+                /*7  userid*/    "?," + //7
+                /*8  owner_id*/  "?," + //8
+                /*9  localize*/  "'en'," +
+                /*10 slug*/      "?," + //9
+                /*11 segment*/   "'eng'," +
+                /*12 status*/    "'Active'," +
+                /*13 cropic*/    "'default.jpeg'," +
+                /*14 roles */    "'a:0:{}'," +
+                /*15 is Owner*/  "?," + //10
+                /*16 password*/  "?" +   //11
+                " )";
+        int slugInc = 0;
+        String queryIdOwner = "SELECT fos_user.id FROM fos_user WHERE fos_user.userid = ";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// вставляем юзеров из таблицы в новую базу
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
         try {
             System.out.println("\nConnecting to a selected database...");
             con = DriverManager.getConnection(url2, userLORG2, passwordLORG2);
             System.out.println("Connected database successfully...");
             stmt = con.createStatement();
-            String insertSQLUsers = "INSERT  INTO fos_user " +
-                    /*1*/      "(username," +
-                    /*2*/      "username_canonical," +
-                    /*3*/      "email," +
-                    /*4*/      "email_canonical," +
-                    /*5*/      "enabled," +
-                    /*6*/      "last_login, " +
-                    /*7*/      "userId," +
-                    /*8*/      "owner_id," +
-                    /*9*/      "localize," +
-                    /*10*/    "slug," +
-                    /*11*/    "segment," +
-                    /*12*/    "status," +
-                    /*13*/    "cropic," +
-                    /*14*/    "roles," +
-                    /*15*/    "is_owner," +
-                    /*16*/    "password)" +
 
-                    "VALUES (" +
-                    /*1  username*/  "?," + //1
-                    /*2  usm_cncl*/  "?," + //2
-                    /*3  email*/     "?," + //3
-                    /*4  eml_cnncl*/ "?," + //4
-                    /*5  enabled*/   "?," + //5
-                    /*6  last_lgn*/  "?," + //6
-                    /*7  userid*/    "?," + //7
-                    /*8  owner_id*/  "?," + //8
-                    /*9  localize*/  "'en'," +
-                    /*10 slug*/      "?," + //9
-                    /*11 segment*/   "'eng'," +
-                    /*12 status*/    "'Active'," +
-                    /*13 cropic*/    "'default.jpeg'," +
-                    /*14 roles */    "'a:0:{}'," +
-                    /*15 is Owner*/  "?," + //10
-                    /*16 password*/  "?" +   //11
-                    " )";
             Slugify slg = new Slugify();
             int numberOfUser = 0;
             for (List<String> line : listOfUsers) {
@@ -110,6 +97,8 @@ public class ReadDB {
                 }
                 String is_owner = line.get(2);
                 String enabled = "1";
+                String password = String.valueOf(generateString(new Random(), "QWERTYUIOPqwertyuiopASDDFGHJKLasdfghjkl", 40));
+                statement.setString(11, password);
                 statement.setString(1, line.get(5));
                 statement.setString(2, name_canonical);
                 statement.setString(3, email);
@@ -120,27 +109,15 @@ public class ReadDB {
                 statement.setString(8, owner_id);
                 statement.setString(9, slug);
                 statement.setString(10, is_owner);
-                Random rng = new Random();
-                String password = String.valueOf(generateString(rng, "QWERTYUIOPqwertyuiopASDDFGHJKLasdfghjkl", 40));
-                statement.setString(11, password);
+
                 int affectedRow = statement.executeUpdate();
                 if (affectedRow == 0) {
                     System.out.print("\rСоздание строки не удалось - " + email);
                 } else {
                     receiveIDinNewDB(line, statement);
-
                 }
                 numberOfUser++;
-
-                try {
-                    String data = "\r" + "|/-\\".charAt(numberOfUser % "|/-\\".length()) + " добавляем номер " + numberOfUser + " с почтой " + email;
-                    System.out.write(data.getBytes());
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                progressBar(numberOfUser, email);
 
             }
             System.out.println("\n\nFinished to convert the users\n=== === === === ===\n=== === === === ===\n");
@@ -175,7 +152,7 @@ public class ReadDB {
                     continue;
                 }
                 PreparedStatement statement = con.prepareStatement(insertSQLQuestions, Statement.RETURN_GENERATED_KEYS);
-                String userid = oldIdOwner; //connectToFOS_UserID(line.get(11), listOfUsers);
+                String userId = oldIdOwner; //connectToFOS_UserID(line.get(11), listOfUsers);
                 String title = line.get(27);
                 String content = line.get(28);
                 String created = line.get(24);
@@ -186,10 +163,10 @@ public class ReadDB {
                 if (updated.contains("null")) {
                     updated = created;
                 }
-                if (userid.contains("null")) {
+                if (userId.contains("null")) {
                     continue;
                 }
-                statement.setString(1, userid);
+                statement.setString(1, userId);
                 statement.setString(2, title);
                 statement.setString(3, content);
                 statement.setString(4, slug);
@@ -307,50 +284,50 @@ public class ReadDB {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-
             }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка комментариев
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             List<List<String>> list_Old_New_Id_A = readFromFile(fileNameOfAnswerRel, false);
-
             insertCommentsInNewDB(slugInc, queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
-            for (List<String> line : listOfTopic) {
-                String slug = slg.slugify(line.get(1));// слаг для топика
-                String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
-                        "VALUES (?,'short explanation about topic',?,'default_topic.jpeg', 'eng')";
-                //stmt.executeUpdate(insertSQLTopic);
-                PreparedStatement statement = con.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
-                statement.setString(1, line.get(1));
-                statement.setString(2, slug);
-                int affectedRow = statement.executeUpdate();
-                if (affectedRow == 0) {
-                    System.out.println("Создание строки не удалось - topic " + line.get(1));
-                } else {
-                    receiveIDinNewDB(line, statement);
-                    //saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfAnswerRel);
-                }
-                //прогресс бар
-                try {
-                    String data = "\r" + "|-+".charAt(slugInc % "|-+".length()) + " " + slugInc;
-                    System.out.write(data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                receiveIDinNewDB(line, statement);
-            }
-            rs = stmt.executeQuery(queryTopic);
-            while (rs.next()) {
-                String topic = rs.getString(2);
-                int id = rs.getInt(1);
-                System.out.println("index is  : " + id + " название: " + topic);
-            }
+
+            InsertTopics.insertTopics(queryTopic, listOfTopic,fileNameOfTopicRel);
+            // for (List<String> line : listOfTopic) {
+            //     String slug = slg.slugify(line.get(1));// слаг для топика
+            //     String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
+            //             "VALUES (?,'short explanation about topic',?,'default_topic.jpeg', 'eng')";
+            //     //stmt.executeUpdate(insertSQLTopic);
+            //     PreparedStatement statement = con.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
+            //     statement.setString(1, line.get(1));
+            //     statement.setString(2, slug);
+            //     int affectedRow = statement.executeUpdate();
+            //     if (affectedRow == 0) {
+            //         System.out.println("Создание строки не удалось - topic " + line.get(1));
+            //     } else {
+            //         receiveIDinNewDB(line, statement);
+            //         //saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfAnswerRel);
+            //     }
+            //     //прогресс бар
+            //     try {
+            //         String data = "\r" + "|-+".charAt(slugInc % "|-+".length()) + " " + slugInc;
+            //         System.out.write(data.getBytes());
+            //     } catch (IOException e) {
+            //         e.printStackTrace();
+            //     }
+            //     receiveIDinNewDB(line, statement);
+            // }
+            // rs = stmt.executeQuery(queryTopic);
+            // while (rs.next()) {
+            //     String topic = rs.getString(2);
+            //     int id = rs.getInt(1);
+            //     System.out.println("index is  : " + id + " название: " + topic);
+            // }
+//////////////////////////////////////////////////////////// конец блока вставок в базу ///////////////////////////
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
         } finally {
@@ -366,6 +343,18 @@ public class ReadDB {
             //    } catch (SQLException se) { /*can't do anything*/ }
         }
 
+    }
+
+    public static void progressBar(int myCounter, String str) {
+        try {
+            String data = "\r" + "|/-\\".charAt(myCounter % "|/-\\".length()) + " добавляем номер " + myCounter + " с данными " + str;
+            System.out.write(data.getBytes());
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void insertCommentsInNewDB(int slugInc, String queryIdOwner,
@@ -463,7 +452,7 @@ public class ReadDB {
         return slug;
     }
 
-    private static void saveToFileTableOfRelation(String oldId, String newId, String fileNameId) {
+    public static void saveToFileTableOfRelation(String oldId, String newId, String fileNameId) {
         // определяем объект для каталога
         File dir = new File("D:\\TempDir\\");
 
@@ -534,222 +523,9 @@ public class ReadDB {
             } else {
                 list.add(str);
             }
-
         }
         return list;
-
     }
-
-
-    //==============================================================================================
-/*
-    private static void saveDataFromLorg1() {
-        String queryTopic = "SELECT id,topic FROM qa_topics";
-        String queryPost = "SELECT " +
-                "postid," +         //0
-                "type," +           //1
-                "parentid," +       //2
-                "categoryid," +     //3
-                "catidpath1," +     //4
-                "catidpath2," +     //5
-                "catidpath3," +     //6
-                "acount," +         //7
-                "amaxvote," +       //8
-                "selchildid," +     //9
-                "closedbyid," +     //10
-                "userid," +         //11
-                "cookieid," +       //12
-                "createip," +       //13
-                "lastuserid," +     //14
-                "lastip," +         //15
-                "upvotes," +        //16
-                "downvotes," +      //17
-                "netvotes," +       //18
-                "lastviewip," +     //19
-                "views," +          //20
-                "hotness," +        //21
-                "flagcount," +      //22
-                "format," +         //23
-                "created," +        //24
-                "updated," +        //25
-                "updatetype," +     //26
-                "title," +          //27
-                "content," +        //28
-                "name," +           //29
-                "notify" +          //30
-                " FROM qa_posts WHERE userid IS NOT NULL";
-
-        String queryUsers = "SELECT " +
-                "userid," +
-                "sellerid," +
-                "owner," +
-                "created," +
-                "email," +
-                "handle," +
-                "loggedin," +
-                "written" +
-                " FROM qa_users WHERE sellerid IS NOT NULL ";
-
-        try {
-            // opening database connection to MySQL server
-            con = DriverManager.getConnection(url, user, password);
-            // getting Statement object to execute query
-            stmt = con.createStatement();
-            // executing SELECT query
-            rs = stmt.executeQuery(queryTopic);
-            while (rs.next()) {
-                String topic = rs.getString(2);
-                int id = rs.getInt(1);
-                System.out.println("index is  : " + id + " название: " + topic);
-                saveToFile(id, topic);
-            }
-// выгрузка таблицы юзеров
-            rs = stmt.executeQuery(queryUsers);
-            while (rs.next()) {
-                //String topic = rs.getString(2);
-                //int id = rs.getInt(1);
-                //System.out.println("index is  : " + id + " название: " + topic);
-                saveToFileUsers(rs);
-            }
-//выгрузка таблицы сообщений
-            rs = stmt.executeQuery(queryPost);
-            while (rs.next()) {
-                saveToFilePost(rs);
-            }
-        } catch (SQLException sqlEx) {
-            sqlEx.printStackTrace();
-        } finally {
-            //close connection ,stmt and resultset here
-            try {
-                con.close();
-            } catch (SQLException se) { */
-/*can't do anything *//*
- }
-            try {
-                stmt.close();
-            } catch (SQLException se) { */
-/*can't do anything *//*
- }
-            try {
-                rs.close();
-            } catch (SQLException se) { */
-/*can't do anything *//*
- }
-        }
-    }
-*/
-/*
-
-    private static void saveToFilePost(ResultSet rs) throws SQLException {
-        int columnsTotal = rs.getMetaData().getColumnCount();
-        // определяем объект для каталога
-        File dir = new File("D:\\TempDir\\");
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
-        //определяем вопрос, ответ или комментарий
-        String quAnCm = rs.getString(2);
-        String fileNameQAC;
-        if (quAnCm.contains("Q")) {
-            fileNameQAC = "questions";
-
-        } else if (quAnCm.contains("A")) {
-            fileNameQAC = "answers";
-        } else if (quAnCm.contains("C")) {
-            fileNameQAC = "comments";
-        } else return;
-        File fileName = new File(fileNameQAC);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + File.separator + fileName.getName() + ".csv", true))) {
-            String line = "";
-            for (int i = 1; i <= columnsTotal; i++) {
-                String essence = rs.getString(i);
-                if (essence == null) {
-                    essence = "null";
-                }
-                byte[] lineCoded = essence.getBytes("UTF-8");
-                String encoded = Base64.getEncoder().encodeToString(lineCoded);
-                if (i < columnsTotal) {
-                    line = line + encoded + ",";
-                } else {
-                    line = line + encoded;
-                }
-            }
-            line = line + "\n";
-            // запись всей строки в файл
-            */
-/*byte[] lineCoded = line.getBytes("UTF-8");
-            String encoded = Base64.getEncoder().encodeToString(lineCoded);
-            byte[] decoded = Base64.getDecoder().decode(encoded);
-            *//*
-
-            writer.write(line);
-            writer.flush();
-            writer.close();
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-*/
-/*
-
-    private static void saveToFileUsers(ResultSet rs) throws SQLException {
-        int columnsTotal = rs.getMetaData().getColumnCount();
-        // определяем объект для каталога
-        File dir = new File("D:\\TempDir\\");
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
-        File fileName = new File("users");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + File.separator + fileName.getName() + ".csv", true))) {
-            String line = "";
-            for (int i = 1; i < columnsTotal; i++) {
-                String essence = rs.getString(i);
-                line = line + essence + ",";
-                //System.out.println(line);
-                try {
-                    String data = "\r" + "|/-\\".charAt(i % "|/-\\".length()) + " записываем данные в файл... " + fileName;
-                    System.out.write(data.getBytes());
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            line = line + rs.getString(columnsTotal) + "\n";
-            // запись всей строки в файл
-            writer.write(line);
-            writer.flush();
-            writer.close();
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
-        System.out.println("\nзапись завершена.");
-    }
-*/
-/*
-    private static void saveToFile(int id, String topic) {
-        // определяем объект для каталога
-        File dir = new File("D:\\TempDir\\");
-
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
-        File fileName = new File("topic");
-        System.out.println("Записываем данные в файл... " + fileName);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + File.separator + fileName.getName() + ".csv", true))) {
-            // запись всей строки
-            String line = id + "," + topic + "\n";
-            writer.write(line);
-            writer.flush();
-            writer.close();
-
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
-        System.out.println("данные записаны...");
-    }
-   */
 }
 
 
