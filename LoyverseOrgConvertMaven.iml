@@ -14,5 +14,7 @@
     <orderEntry type="library" name="Maven: mysql:mysql-connector-java:5.1.45" level="project" />
     <orderEntry type="library" name="Maven: com.github.slugify:slugify:2.2" level="project" />
     <orderEntry type="library" name="Maven: com.ibm.icu:icu4j:60.1" level="project" />
+    <orderEntry type="library" name="Maven: me.tongfei:progressbar:0.5.5" level="project" />
+    <orderEntry type="library" name="Maven: jline:jline:2.12" level="project" />
   </component>
 </module>
