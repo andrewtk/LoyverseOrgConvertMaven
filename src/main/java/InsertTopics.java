@@ -30,6 +30,7 @@ public class InsertTopics {
             stmt = con.createStatement();
 
             insertTopics(queryTopic, listOfTopic, fileNameOfTopicRel);
+
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
         } finally {
@@ -58,6 +59,17 @@ public class InsertTopics {
     public static void insertTopics(String queryTopic, List<List<String>> listOfTopic, String fileNameOfTopicRel) throws SQLException {
         Slugify slg = new Slugify();
         int slugInc = 0;
+        String queryQsToTopic = "SELECT" +
+                "  qa_posts.postid AS qid," +
+                "  qa_words.wordid AS wid," +
+                "  qa_topics.id AS tid," +
+                "  qa_topics.topic AS topic" +
+                " FROM qa_words" +
+                "  LEFT JOIN qa_topics ON topic = word" +
+                "  LEFT JOIN qa_posttags ON qa_words.wordid = qa_posttags.wordid" +
+                "  LEFT JOIN qa_posts ON qa_posttags.postid = qa_posts.postid" +
+                " WHERE topic IS NOT NULL and qa_posts.postid is not NULL and qa_posts.type like \"%Q%\" AND qa_topics.id=";
+
         for (List<String> line : listOfTopic) {
             String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
                     "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'eng')";
@@ -74,8 +86,17 @@ public class InsertTopics {
                 ReadDB.saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfTopicRel);
             }
             ReadDB.progressBar(slugInc++, slug);
-            ReadDB.receiveIDinNewDB(line, statement);
+
         }
+
+        //создание таблицы связки
+        String insertSQL_qs_to_topic = "INSERT INTO qs_to_topic (tpid, qsid) VALUES (?,?)";
+
+        //String topicId = ReadDB.takeNewIdFromFile(oldTopicId,listOfTopic);
+
+        //
+
+
         System.out.println("вывод актуальной таблицы топиков - временное решение");
         rs = stmt.executeQuery(queryTopic);
         while (rs.next()) {

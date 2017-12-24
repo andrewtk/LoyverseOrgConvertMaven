@@ -1,5 +1,35 @@
+/*        "postid," + //      //0
+                   "type," +           //1
+                   "parentid," +       //2
+                   "categoryid," +     //3
+                   "catidpath1," +     //4
+                   "catidpath2," +     //5
+                   "catidpath3," +     //6
+                   "acount," +         //7
+                   "amaxvote," +       //8
+                   "selchildid," +     //9
+                   "closedbyid," +     //10
+                   "userid," +         //11
+                   "cookieid," +       //12
+                   "createip," +       //13
+                   "lastuserid," +     //14
+                   "lastip," +         //15
+                   "upvotes," +        //16
+                   "downvotes," +      //17
+                   "netvotes," +       //18
+                   "lastviewip," +     //19
+                   "views," +          //20
+                   "hotness," +        //21
+                   "flagcount," +      //22
+                   "format," +         //23
+                   "created," +        //24
+                   "updated," +        //25
+                   "updatetype," +     //26
+                   "title," +          //27
+                   "content," +        //28
+                   "name," +           //29
+                   "notify" +          //30*/
 import com.github.slugify.Slugify;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,10 +44,6 @@ import static java.util.stream.Collectors.toList;
 
 public class ReadDB {
     // JDBC URL, username and password of MySQL server
-    private static final String url = "jdbc:mysql://localhost:3306/lorg";
-    private static final String user = "root";
-    private static final String password = "root";
-
     private static final String url2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
@@ -123,7 +149,7 @@ public class ReadDB {
             System.out.println("\n\nFinished to convert the users\n=== === === === ===\n=== === === === ===\n");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//вставка вопросов
+// вставка вопросов
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             System.out.println("\nStart to convert the questions");
             for (List<String> line : listOfQuestions) {
@@ -179,52 +205,12 @@ public class ReadDB {
                     receiveIDinNewDB(line, statement);
                     saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfQuestionRel);
                 }
-
-                try {
-                    String data = "\r" + "|/-\\".charAt(slugInc % "|/-\\".length()) + " " + slugInc;
-                    System.out.write(data.getBytes());
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                progressBar(slugInc,title);
             }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //вставка ответов
-          /*        "postid," + //      //0
-                    "type," +           //1
-                    "parentid," +       //2
-                    "categoryid," +     //3
-                    "catidpath1," +     //4
-                    "catidpath2," +     //5
-                    "catidpath3," +     //6
-                    "acount," +         //7
-                    "amaxvote," +       //8
-                    "selchildid," +     //9
-                    "closedbyid," +     //10
-                    "userid," +         //11
-                    "cookieid," +       //12
-                    "createip," +       //13
-                    "lastuserid," +     //14
-                    "lastip," +         //15
-                    "upvotes," +        //16
-                    "downvotes," +      //17
-                    "netvotes," +       //18
-                    "lastviewip," +     //19
-                    "views," +          //20
-                    "hotness," +        //21
-                    "flagcount," +      //22
-                    "format," +         //23
-                    "created," +        //24
-                    "updated," +        //25
-                    "updatetype," +     //26
-                    "title," +          //27
-                    "content," +        //28
-                    "name," +           //29
-                    "notify" +          //30*/
+
             System.out.println("Start to convert the answers");
             List<List<String>> list_Old_New_Id_Q = readFromFile(fileNameOfQuestionRel, false);
             for (List<String> line : listOfAnswers) {
@@ -247,7 +233,6 @@ public class ReadDB {
                     continue;
                 }
                 String oldParentId_from_qa_post = line.get(2);//parentId from qa_post
-                //String qsId = takeNewIdOfQuestion(oldParentId_from_qa_post, listOfQuestions);
                 String qsId = takeNewIdFromFile(oldParentId_from_qa_post, list_Old_New_Id_Q);
                 if (qsId.contains("-1")) {
                     continue;
@@ -278,12 +263,7 @@ public class ReadDB {
                     receiveIDinNewDB(line, statement);
                     saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfAnswerRel);
                 }
-                try {
-                    String data = "\r" + "|-".charAt(slugInc % "|-".length()) + " " + slugInc;
-                    System.out.write(data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                progressBar(slugInc,slug);
             }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,10 +273,10 @@ public class ReadDB {
             insertCommentsInNewDB(queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//вставка тем - топиков
+// вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
 
-            InsertTopics.insertTopics(queryTopic, listOfTopic,fileNameOfTopicRel);
+            InsertTopics.insertTopics(queryTopic, listOfTopic, fileNameOfTopicRel);
 
 //////////////////////////////////////////////////////////// конец блока вставок в базу ///////////////////////////
         } catch (SQLException sqlEx) {
@@ -309,9 +289,9 @@ public class ReadDB {
             try {
                 stmt.close();
             } catch (SQLException se) { /*can't do anything*/ }
-            //    try {
-            //        rs.close();
-            //    } catch (SQLException se) { /*can't do anything*/ }
+            try {
+                rs.close();
+            } catch (SQLException se) { /*can't do anything*/ }
         }
 
     }
@@ -387,11 +367,11 @@ public class ReadDB {
             } else {
                 receiveIDinNewDB(line, statement);
             }
-            progressBar(myCounter," comment");
+            progressBar(myCounter, " comment");
         }
     }
 
-    private static String takeNewIdFromFile(String oldParentId_from_qa_post, List<List<String>> listOfId) {
+    public static String takeNewIdFromFile(String oldParentId_from_qa_post, List<List<String>> listOfId) {
         String newId = "-1";
         for (List<String> line : listOfId) {
             if (line.get(0).equals(oldParentId_from_qa_post)) {

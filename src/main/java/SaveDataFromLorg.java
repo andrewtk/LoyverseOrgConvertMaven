@@ -22,6 +22,16 @@ public class SaveDataFromLorg {
 
     public static void saveDataFromLorg1() {
         String queryTopic = "SELECT id,topic FROM qa_topics";
+        String queryPostTopic = "SELECT " +
+                "  qa_posts.postid AS qid, " +
+                "  qa_words.wordid AS wid, " +
+                "  qa_topics.id AS tid, " +
+                "  qa_topics.topic AS topic " +
+                "FROM qa_words " +
+                "  LEFT JOIN qa_topics ON topic = word " +
+                "  LEFT JOIN qa_posttags ON qa_words.wordid = qa_posttags.wordid " +
+                "  LEFT JOIN qa_posts ON qa_posttags.postid = qa_posts.postid " +
+                "WHERE topic IS NOT NULL and qa_posts.postid is not NULL and qa_posts.type like \"%Q%\"";
         String queryPost = "SELECT " +
                 "postid," +         //0
                 "type," +           //1
@@ -66,6 +76,7 @@ public class SaveDataFromLorg {
                 "loggedin," +
                 "written" +
                 " FROM qa_users WHERE sellerid IS NOT NULL ";
+        String fileNameTopicRel = "D:\\Tempdir\\" + "oldNewIdTopicRel";
 
         try {
             // opening database connection to MySQL server
@@ -88,9 +99,9 @@ public class SaveDataFromLorg {
 // выгрузка таблицы юзеров
             rs = stmt.executeQuery(queryUsers);
             System.out.println("Save data of Users in file about Users...");
-            int i=0;
+            int i = 0;
             while (rs.next()) {
-                 saveToFileUsers(rs);
+                saveToFileUsers(rs);
                 progressBar(i);
                 i++;
             }
@@ -98,13 +109,23 @@ public class SaveDataFromLorg {
 
 //выгрузка таблицы сообщений
             rs = stmt.executeQuery(queryPost);
-            System.out.println("Начинаем записть данных в файл сообщений");
-            i=1;
+            System.out.println("\nНачинаем записть данных в файл сообщений");
+            i = 1;
             while (rs.next()) {
                 saveToFilePost(rs);
                 progressBar(i);
                 i++;
             }
+//выгрузка таблицы соответствий topic,qa-words,qa-posttags,qa-post
+            rs = stmt.executeQuery(queryPostTopic);
+            System.out.println("\nНачинаем записть данных в файл связки топиков и вопросов");
+            i = 1;
+            while (rs.next()) {
+                saveToFileQsToTopic(rs,fileNameTopicRel);
+                progressBar(i);
+                i++;
+            }
+
             System.out.println("\nДанные успешно записаные в файлы");
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
@@ -124,13 +145,39 @@ public class SaveDataFromLorg {
 
     public static void progressBar(int i) {
         try {
-            String data = "\r" + "|/-\\".charAt(i % "|/-\\".length()) + " записываем данные в файл... " ;
+            String data = "\r" + "|/-\\".charAt(i % "|/-\\".length()) + " записываем данные в файл... ";
             System.out.write(data.getBytes());
             Thread.sleep(10);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void saveToFileQsToTopic(ResultSet rs, String fileNameTopicRel) throws SQLException {
+        int columnsTotal = rs.getMetaData().getColumnCount();
+        // определяем объект для каталога
+        File dir = new File("D:\\TempDir\\");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+
+        File fileName = new File(fileNameTopicRel);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + File.separator + fileName.getName() + ".csv", true))) {
+
+            String line = "";
+            for (int i = 1; i < columnsTotal; i++) {
+                String essence = rs.getString(i);
+                line = line + essence + ",";
+            }
+            line = line + rs.getString(columnsTotal) + "\n";
+            // запись всей строки в файл
+            writer.write(line);
+            writer.flush();
+            writer.close();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
         }
     }
 
