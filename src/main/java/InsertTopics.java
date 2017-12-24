@@ -59,7 +59,7 @@ public class InsertTopics {
     public static void insertTopics(String queryTopic, List<List<String>> listOfTopic, String fileNameOfTopicRel) throws SQLException {
         Slugify slg = new Slugify();
         int slugInc = 0;
-        String queryQsToTopic = "SELECT" +
+        String query_qaPostTags = "SELECT" +
                 "  qa_posts.postid AS qid," +
                 "  qa_words.wordid AS wid," +
                 "  qa_topics.id AS tid," +
@@ -85,6 +85,7 @@ public class InsertTopics {
                 ReadDB.receiveIDinNewDB(line, statement);
                 ReadDB.saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfTopicRel);
             }
+            //todo сделать запись в таблицу связки айдишники
             ReadDB.progressBar(slugInc++, slug);
 
         }
