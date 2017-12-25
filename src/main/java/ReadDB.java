@@ -35,10 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -54,14 +51,13 @@ public class ReadDB {
     private static ResultSet rs;
 
     public static void main(String args[]) throws IOException {
-        //saveDataFromLorg1();
-        SaveDataFromLorg.saveDataFromLorg1();
+        //SaveDataFromLorg.saveDataFromLorg1();
         loadDataToLorg2();
     }
 
 //====================================================================================================================
     private static void loadDataToLorg2() throws IOException {
-        List<List<String>> listOfTopic = readFromFile("D:\\Tempdir\\topic.csv", false);
+        List<List<String>> listOfTopics = readFromFile("D:\\Tempdir\\topic.csv", false);
         List<List<String>> listOfUsers = readFromFile("D:\\Tempdir\\users.csv", false);
         List<List<String>> listOfQuestions = readFromFile("D:\\Tempdir\\questions.csv", true);
         List<List<String>> listOfAnswers = readFromFile("D:\\Tempdir\\answers.csv", true);
@@ -74,10 +70,11 @@ public class ReadDB {
         String queryTopic = "SELECT * FROM topics";
         String queryQu = "SELECT * FROM questions";
         String queryUsers = "SELECT * FROM for_user Where sellerid is not null";
-        String insertTopics = "";
+        String insertTopics = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
+                "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'eng')";
         String insertSQLUsers = "INSERT  INTO fos_user (username, username_canonical,email, email_canonical," +
-                "enabled, last_login, userId,owner_id, localize, slug, segment, status, cropic, roles, is_owner, pasword)" +
-                "VALUES (" +
+                "enabled, last_login, userId,owner_id, localize, slug, segment, status, cropic, roles, is_owner, password) " +
+                " VALUES (" +
                 /*1  username*/  "?," + //1
                 /*2  usm_cncl*/  "?," + //2
                 /*3  email*/     "?," + //3
@@ -99,7 +96,7 @@ public class ReadDB {
         String queryIdOwner = "SELECT fos_user.id FROM fos_user WHERE fos_user.userid = ";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// вставляем юзеров из таблицы в новую базу
+// вставляем юзеров из файла в новую базу
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         try {
@@ -107,6 +104,32 @@ public class ReadDB {
             con = DriverManager.getConnection(url2, userLORG2, passwordLORG2);
             System.out.println("Connected database successfully...");
             stmt = con.createStatement();
+            System.out.print("Очистить базу от тестовых данных? ( Y-очистить, любая другая клавина - продолжить) ->");
+            Scanner in = new Scanner(System.in);
+            String doClean = in.next();
+            if (doClean.toLowerCase().contains("y")){
+                String deleteLines = "delete from ? Where id>?";
+                ArrayList<Integer> dbIndex = new ArrayList<>();
+                ArrayList<String> dbName = new ArrayList();
+
+                dbName.add("qs_to_topic"); dbIndex.add(171);
+                dbName.add("topics");  dbIndex.add(76);
+                dbName.add("comments"); dbIndex.add(212);
+                dbName.add("answers"); dbIndex.add(1250);
+                dbName.add("questions"); dbIndex.add(1252);
+                dbName.add("fos_user"); dbIndex.add(1189);
+
+
+
+                for (int i = 0; i < dbName.size(); i++) {
+                    deleteLines = "delete from " + dbName.get(i) + " Where id>" + dbIndex.get(i);
+                    stmt.executeUpdate(deleteLines);
+                }
+                //удаляем файлы сопостовланеия айдишников
+                File file = new File("/Users/prologistic/file.txt");
+
+
+            }
 
             Slugify slg = new Slugify();
             int numberOfUser = 0;
@@ -123,7 +146,8 @@ public class ReadDB {
                 }
                 String is_owner = line.get(2);
                 String enabled = "1";
-                String password = String.valueOf(generateString(new Random(), "QWERTYUIOPqwertyuiopASDDFGHJKLasdfghjkl", 40));
+                Random rnd = new Random();
+                String password = String.valueOf(generateString(rnd, "QWERTYUIOPqwertyuiopASDDFGHJKLasdfghjkl", 40));
                 statement.setString(11, password);
                 statement.setString(1, line.get(5));
                 statement.setString(2, name_canonical);
@@ -210,8 +234,8 @@ public class ReadDB {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //вставка ответов
-
-            System.out.println("Start to convert the answers");
+            slugInc=0;
+            System.out.println("\nStart to convert the answers");
             List<List<String>> list_Old_New_Id_Q = readFromFile(fileNameOfQuestionRel, false);
             for (List<String> line : listOfAnswers) {
                 String slug = getMySlug(slugInc, slg, line);
@@ -246,7 +270,7 @@ public class ReadDB {
                 if (updated.contains("null")) {
                     updated = created;
                 }
-                String insertSQLAnswers = "INSERT IGNORE INTO answers " +
+                String insertSQLAnswers = "INSERT INTO answers " +
                         "(qsid,userid,content,slug,mailme,created,updated)" +
                         "VALUES (?,?,?,?,'0',?,?)";
                 PreparedStatement statement = con.prepareStatement(insertSQLAnswers, Statement.RETURN_GENERATED_KEYS);
@@ -276,7 +300,7 @@ public class ReadDB {
 // вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
 
-            InsertTopics.insertTopics(queryTopic, listOfTopic, fileNameOfTopicRel);
+            InsertTopics.insertTopics(queryTopic, listOfTopics, list_Old_New_Id_Q, fileNameOfTopicRel);
 
 //////////////////////////////////////////////////////////// конец блока вставок в базу ///////////////////////////
         } catch (SQLException sqlEx) {
@@ -312,7 +336,7 @@ public class ReadDB {
                                               List<List<String>> listOfComments,
                                               List<List<String>> listOfOldAndNewQuestionsId,
                                               List<List<String>> listOfOldAndNewAnsId) throws SQLException {
-        System.out.println("Start to convert the comments");
+        System.out.println("\nStart to convert the comments");
         String anim = "|/-\\";
         int myCounter = 0;
         for (List<String> line : listOfComments) {

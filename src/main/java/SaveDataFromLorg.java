@@ -117,15 +117,14 @@ public class SaveDataFromLorg {
                 i++;
             }
 //выгрузка таблицы соответствий topic,qa-words,qa-posttags,qa-post
-            rs = stmt.executeQuery(queryPostTopic);
+/*            rs = stmt.executeQuery(queryPostTopic);
             System.out.println("\nНачинаем записть данных в файл связки топиков и вопросов");
             i = 1;
             while (rs.next()) {
                 saveToFileQsToTopic(rs,fileNameTopicRel);
                 progressBar(i);
                 i++;
-            }
-
+            }*/
             System.out.println("\nДанные успешно записаные в файлы");
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
