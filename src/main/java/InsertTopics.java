@@ -86,7 +86,7 @@ public class InsertTopics {
 
             for (List<String> line : listOfTopic) {
                 String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment,created,updated)" +
-                        "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'eng','2017-11-11 11:11:11','2017-11-11 11:11:11')";
+                        "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'en','2017-11-11 11:11:11','2017-11-11 11:11:11')";
                 PreparedStatement statement = con2.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
                 PreparedStatement insertStatement = con2.prepareStatement(insertSQL_qs_to_topic);
                 String topic = line.get(1);

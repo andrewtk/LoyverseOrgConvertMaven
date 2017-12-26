@@ -73,7 +73,7 @@ public class ReadDB {
         String insertTopics = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
                 "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'eng')";
         String insertSQLUsers = "INSERT  INTO fos_user (username, username_canonical,email, email_canonical," +
-                "enabled, last_login, userId,owner_id, localize, slug, segment, status, cropic, roles, is_owner, password) " +
+                "enabled, last_login, userId,owner_id, localize, slug, status, cropic, roles, is_owner, password) " +
                 " VALUES (" +
                 /*1  username*/  "?," + //1
                 /*2  usm_cncl*/  "?," + //2
@@ -85,12 +85,12 @@ public class ReadDB {
                 /*8  owner_id*/  "?," + //8
                 /*9  localize*/  "'en'," +
                 /*10 slug*/      "?," + //9
-                /*11 segment*/   "'eng'," +
-                /*12 status*/    "'Active'," +
-                /*13 cropic*/    "'default.jpeg'," +
-                /*14 roles */    "'a:0:{}'," +
-                /*15 is Owner*/  "?," + //10
-                /*16 password*/  "?" +   //11
+                /*11 status*/    "'Active'," +
+                /*12 cropic*/    "'default.jpeg'," +
+                /*13 roles */    "'a:0:{}'," +
+                /*14 is Owner*/  "?," + //10
+                /*15 password*/  "?" +   //11
+
                 " )";
         int slugInc = 0;
         String queryIdOwner = "SELECT fos_user.id FROM fos_user WHERE fos_user.userid = ";
@@ -113,11 +113,11 @@ public class ReadDB {
                 ArrayList<String> dbName = new ArrayList();
 
                 dbName.add("qs_to_topic"); dbIndex.add(171);
-                dbName.add("topics");  dbIndex.add(76);
-                dbName.add("comments"); dbIndex.add(212);
-                dbName.add("answers"); dbIndex.add(1250);
-                dbName.add("questions"); dbIndex.add(1252);
-                dbName.add("fos_user"); dbIndex.add(1189);
+                dbName.add("topics");  dbIndex.add(51);
+                dbName.add("comments"); dbIndex.add(74);
+                dbName.add("answers"); dbIndex.add(93);
+                dbName.add("questions"); dbIndex.add(73);
+                dbName.add("fos_user"); dbIndex.add(36);
 
 
 
