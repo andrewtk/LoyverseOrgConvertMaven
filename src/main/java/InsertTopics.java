@@ -101,7 +101,7 @@ public class InsertTopics {
                 ReadDB.receiveIDinNewDB(line, statement);
                 String oldTopicID = line.get(0);
                 String newTopicID = line.get(line.size() - 1);
-                ReadDB.saveToFileTableOfRelation(oldTopicID, newTopicID, fileNameOfTopicRel);
+                //ReadDB.saveToFileTableOfRelation(oldTopicID, newTopicID, fileNameOfTopicRel);
 
                 String query_qaPostTags_plusID = query_qaPostTags + oldTopicID;
                 // выборка из таблиц старой базы связки топиков с вопросами со старыми айди

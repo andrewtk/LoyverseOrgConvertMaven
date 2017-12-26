@@ -126,8 +126,18 @@ public class ReadDB {
                     stmt.executeUpdate(deleteLines);
                 }
                 //удаляем файлы сопостовланеия айдишников
-                File file = new File("/Users/prologistic/file.txt");
-
+                File file = new File(fileNameOfQuestionRel + ".csv");
+                if(file.delete()){
+                    System.out.println(fileNameOfQuestionRel + " файл удален");
+                }else System.out.println("Файла" + fileNameOfQuestionRel + " не обнаружено");
+                file = new File(fileNameOfAnswerRel + ".csv");
+                if(file.delete()){
+                    System.out.println(fileNameOfAnswerRel + " файл удален");
+                }else System.out.println("Файла" + fileNameOfAnswerRel + " не обнаружено");
+                file = new File(fileNameOfTopicRel + ".csv");
+                if(file.delete()){
+                    System.out.println(fileNameOfTopicRel + " файл удален");
+                }else System.out.println("Файла" + fileNameOfTopicRel + " не обнаружено");
 
             }
 
