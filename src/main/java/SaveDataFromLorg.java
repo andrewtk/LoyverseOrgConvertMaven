@@ -76,7 +76,14 @@ public class SaveDataFromLorg {
                 "loggedin," +
                 "written" +
                 " FROM qa_users WHERE sellerid IS NOT NULL ";
+        String queryVotes = "SELECT " +
+                "postid,userid,vote " +
+                "FROM qa_uservotes";
+        String queryFavorites = "SELECT * " +
+                " FROM qa_userfavorites";
         String fileNameTopicRel = "D:\\Tempdir\\" + "oldNewIdTopicRel";
+        String fileNameVotes = "D:\\Tempdir\\" + "votes";
+        String fileNameFavorites = "D:\\Tempdir\\favorites";
 
         try {
             // opening database connection to MySQL server
@@ -116,15 +123,24 @@ public class SaveDataFromLorg {
                 progressBar(i);
                 i++;
             }
-//выгрузка таблицы соответствий topic,qa-words,qa-posttags,qa-post
-/*            rs = stmt.executeQuery(queryPostTopic);
-            System.out.println("\nНачинаем записть данных в файл связки топиков и вопросов");
+//выгрузка таблицы votes в файл
+            rs = stmt.executeQuery(queryVotes);
+            System.out.println("\nНачинаем запись данных в файл votes ");
             i = 1;
             while (rs.next()) {
-                saveToFileQsToTopic(rs,fileNameTopicRel);
+                saveToFile(rs, fileNameVotes);
                 progressBar(i);
                 i++;
-            }*/
+            }
+//выгрузка таблицы favorites в файл
+            rs = stmt.executeQuery(queryFavorites);
+            System.out.println("\nНачинаем запись данных в файл favorites ");
+            i = 1;
+            while (rs.next()) {
+                saveToFile(rs, fileNameFavorites);
+                progressBar(i);
+                i++;
+            }
             System.out.println("\nДанные успешно записаные в файлы");
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
@@ -154,7 +170,7 @@ public class SaveDataFromLorg {
         }
     }
 
-    private static void saveToFileQsToTopic(ResultSet rs, String fileNameTopicRel) throws SQLException {
+    private static void saveToFile(ResultSet rs, String fileNameTopicRel) throws SQLException {
         int columnsTotal = rs.getMetaData().getColumnCount();
         // определяем объект для каталога
         File dir = new File("D:\\TempDir\\");

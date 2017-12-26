@@ -23,9 +23,12 @@ public class InsertTopics {
 
 
     public static void main(String args[]) throws IOException {
-        String queryTopic = "SELECT * FROM topics";
-        String fileNameOfQuestionRel = "D:\\Tempdir\\" + "oldnewId";
-        String fileNameOfTopicRel = "D:\\Tempdir\\" + "oldnewIdTopic";
+
+        String fileNameOfQuestionRel = "D:\\Tempdir\\" + "old_New_Id_Questions";
+        String fileNameOfAnswerRel = "D:\\Tempdir\\" + "old_new_Id_Answers";
+        String fileNameOfTopicRel = "D:\\Tempdir\\" + "old_new_Id_Topic";
+        String fileNameOfVoteRel = "D:\\Tempdir\\" + "old_new_Id_Votes";
+
         List<List<String>> listOfTopic = ReadDB.readFromFile("D:\\Tempdir\\topic.csv", false);
         List<List<String>> listOfIDQuestions = ReadDB.readFromFile(fileNameOfQuestionRel, false);
 
@@ -38,7 +41,7 @@ public class InsertTopics {
             String deleteLines = "delete from topics Where id>76";
             stmt.executeUpdate(deleteLines);
 
-            insertTopics(queryTopic, listOfTopic, listOfIDQuestions, fileNameOfTopicRel);
+            insertTopics(listOfTopic, listOfIDQuestions, fileNameOfTopicRel);
 
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
@@ -59,13 +62,12 @@ public class InsertTopics {
     /**
      * метод вставки тем в новую базу со связками
      *
-     * @param queryTopic         SQL запрос в старую базу в таблицу топиков
      * @param listOfTopic        список тем в массиве
      * @param fileNameOfTopicRel название файла в котором храниться база соответсвия
      * @throws SQLException
      */
 
-    public static void insertTopics(String queryTopic, List<List<String>> listOfTopic, List<List<String>> listOfIDQuestions, String fileNameOfTopicRel) throws SQLException {
+    public static void insertTopics(List<List<String>> listOfTopic, List<List<String>> listOfIDQuestions, String fileNameOfTopicRel) throws SQLException {
         Slugify slg = new Slugify();
         int slugInc = 0;
         String query_qaPostTags = "SELECT" +

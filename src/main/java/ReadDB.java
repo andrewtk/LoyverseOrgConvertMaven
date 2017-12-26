@@ -39,6 +39,11 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
+/**
+ * url2 - адрес базы куда записываем данные
+ * userLORG2 - логин базы
+ * passwordLORG2 пароль базы
+ */
 public class ReadDB {
     // JDBC URL, username and password of MySQL server
     private static final String url2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
@@ -63,9 +68,12 @@ public class ReadDB {
         List<List<String>> listOfAnswers = readFromFile("D:\\Tempdir\\answers.csv", true);
         List<List<String>> listOfComments = readFromFile("D:\\Tempdir\\comments.csv", true);
 
-        String fileNameOfQuestionRel = "D:\\Tempdir\\" + "oldnewId";
-        String fileNameOfAnswerRel = "D:\\Tempdir\\" + "oldnewIdAnsw";
-        String fileNameOfTopicRel = "D:\\Tempdir\\" + "oldnewIdTopic";
+        String fileNameOfQuestionRel = "D:\\Tempdir\\" + "old_New_Id_Questions";
+        String fileNameOfAnswerRel = "D:\\Tempdir\\" + "old_new_Id_Answers";
+        String fileNameOfTopicRel = "D:\\Tempdir\\" + "old_new_Id_Topic";
+        String fileNameOfCommentRel = "D:\\Tempdir\\" + "old_new_Id_Comment";
+        String fileNameOfVoteRel = "D:\\Tempdir\\" + "old_new_Id_Votes";
+        String fileNameOfUserRel = "D:\\Tempdir\\" + "old_new_Id_Users";
 
         String queryTopic = "SELECT * FROM topics";
         String queryQu = "SELECT * FROM questions";
@@ -175,6 +183,8 @@ public class ReadDB {
                     System.out.print("\rСоздание строки не удалось - " + email);
                 } else {
                     receiveIDinNewDB(line, statement);
+                    saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfUserRel);
+
                 }
                 numberOfUser++;
                 progressBar(numberOfUser, email);
@@ -304,15 +314,27 @@ public class ReadDB {
 // вставка комментариев
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             List<List<String>> list_Old_New_Id_A = readFromFile(fileNameOfAnswerRel, false);
-            insertCommentsInNewDB(queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A);
+            insertCommentsInNewDB(queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A,fileNameOfCommentRel);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
+            InsertTopics.insertTopics(listOfTopics, list_Old_New_Id_Q, fileNameOfTopicRel);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// вставка votes
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            List<List<String>> list_Old_New_Id_C = readFromFile(fileNameOfCommentRel, false);
+            InsertVotes.insertVote(list_Old_New_Id_Q,
+                    list_Old_New_Id_A,
+                    list_Old_New_Id_C,
+                    listOfUsers,
+                    fileNameOfVoteRel);
 
-            InsertTopics.insertTopics(queryTopic, listOfTopics, list_Old_New_Id_Q, fileNameOfTopicRel);
 
-//////////////////////////////////////////////////////////// конец блока вставок в базу ///////////////////////////
+
+
+// конец блока вставок в базу ////////////////////////////////////////////////////////// ///////////////////////////
+
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
         } finally {
@@ -345,7 +367,8 @@ public class ReadDB {
     private static void insertCommentsInNewDB(String queryIdOwner,
                                               List<List<String>> listOfComments,
                                               List<List<String>> listOfOldAndNewQuestionsId,
-                                              List<List<String>> listOfOldAndNewAnsId) throws SQLException {
+                                              List<List<String>> listOfOldAndNewAnsId,
+                                              String fileNameOfCommentRel) throws SQLException {
         System.out.println("\nStart to convert the comments");
         String anim = "|/-\\";
         int myCounter = 0;
@@ -400,6 +423,8 @@ public class ReadDB {
                 //System.out.println("\nСоздание строки не удалось - userId " + userId);
             } else {
                 receiveIDinNewDB(line, statement);
+                saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfCommentRel);
+
             }
             progressBar(myCounter, " comment");
         }
