@@ -29,8 +29,8 @@ public class InsertTopics {
         String fileNameOfTopicRel = "D:\\Tempdir\\" + "old_new_Id_Topic";
         String fileNameOfVoteRel = "D:\\Tempdir\\" + "old_new_Id_Votes";
 
-        List<List<String>> listOfTopic = ReadDB.readFromFile("D:\\Tempdir\\topic.csv", false);
-        List<List<String>> listOfIDQuestions = ReadDB.readFromFile(fileNameOfQuestionRel, false);
+        List<List<String>> listOfTopic = ReadDB.readFromFile("D:\\Tempdir\\topic.csv", false, ",");
+        List<List<String>> listOfIDQuestions = ReadDB.readFromFile(fileNameOfQuestionRel, false, ",");
 
         try {
             System.out.println("\nConnecting to a selected database...");
@@ -87,7 +87,7 @@ public class InsertTopics {
             stmt2 = con2.createStatement();
 
             for (List<String> line : listOfTopic) {
-                String insertSQLTopic = "INSERT INTO topics (topic, content, slug, cropic, segment,created,updated)" +
+                String insertSQLTopic = "INSERT IGNORE INTO topics (topic, content, slug, cropic, segment,created,updated)" +
                         "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'en','2017-11-11 11:11:11','2017-11-11 11:11:11')";
                 PreparedStatement statement = con2.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
                 PreparedStatement insertStatement = con2.prepareStatement(insertSQL_qs_to_topic);
@@ -103,7 +103,7 @@ public class InsertTopics {
                 ReadDB.receiveIDinNewDB(line, statement);
                 String oldTopicID = line.get(0);
                 String newTopicID = line.get(line.size() - 1);
-                //ReadDB.saveToFileTableOfRelation(oldTopicID, newTopicID, fileNameOfTopicRel);
+                ReadDB.saveToFileTableOfRelation(oldTopicID, newTopicID, fileNameOfTopicRel);
 
                 String query_qaPostTags_plusID = query_qaPostTags + oldTopicID;
                 // выборка из таблиц старой базы связки топиков с вопросами со старыми айди
@@ -115,8 +115,9 @@ public class InsertTopics {
                     insertStatement.setString(2, newQuestionID);
                     int affectedRowNewTable = insertStatement.executeUpdate();
                     if (affectedRowNewTable == 0) {
-                        System.out.println("Создание записи в таблице 'qs_to_topic' не удалось " + newTopicID + topic);
+                        System.out.println("/nСоздание записи в таблице 'qs_to_topic' не удалось " + newTopicID + topic);
                     }
+
                 }
                 try {
                     resultSetQueryPOST_TOPIC.close();

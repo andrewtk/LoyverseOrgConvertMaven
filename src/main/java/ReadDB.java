@@ -1,4 +1,4 @@
-/*        "postid," + //      //0
+/*                 "postid," + //      //0
                    "type," +           //1
                    "parentid," +       //2
                    "categoryid," +     //3
@@ -62,18 +62,21 @@ public class ReadDB {
 
 //====================================================================================================================
     private static void loadDataToLorg2() throws IOException {
-        List<List<String>> listOfTopics = readFromFile("D:\\Tempdir\\topic.csv", false);
-        List<List<String>> listOfUsers = readFromFile("D:\\Tempdir\\users.csv", false);
-        List<List<String>> listOfQuestions = readFromFile("D:\\Tempdir\\questions.csv", true);
-        List<List<String>> listOfAnswers = readFromFile("D:\\Tempdir\\answers.csv", true);
-        List<List<String>> listOfComments = readFromFile("D:\\Tempdir\\comments.csv", true);
+        String fileNameOfQuestionRel = "D:\\TempDir\\" + "old_New_Id_Questions";
+        String fileNameOfAnswerRel = "D:\\TempDir\\" + "old_new_Id_Answers";
+        String fileNameOfTopicRel = "D:\\TempDir\\" + "old_new_Id_Topics";
+        String fileNameOfCommentRel = "D:\\TempDir\\" + "old_new_Id_Comments";
+        String fileNameOfVoteRel = "D:\\TempDir\\" + "old_new_Id_Votes";
+        String fileNameOfUserRel = "D:\\TempDir\\" + "old_new_Id_Users";
+        String fileNameOfSlugs = "D:\\TempDir\\" + "slugs.csv";
 
-        String fileNameOfQuestionRel = "D:\\Tempdir\\" + "old_New_Id_Questions";
-        String fileNameOfAnswerRel = "D:\\Tempdir\\" + "old_new_Id_Answers";
-        String fileNameOfTopicRel = "D:\\Tempdir\\" + "old_new_Id_Topic";
-        String fileNameOfCommentRel = "D:\\Tempdir\\" + "old_new_Id_Comment";
-        String fileNameOfVoteRel = "D:\\Tempdir\\" + "old_new_Id_Votes";
-        String fileNameOfUserRel = "D:\\Tempdir\\" + "old_new_Id_Users";
+        List<List<String>> listOfTopics = readFromFile("D:\\TempDir\\topic.csv", false, ",");
+        List<List<String>> listOfUsers = readFromFile("D:\\TempDir\\users.csv", false, ",");
+        List<List<String>> listOfQuestions = readFromFile("D:\\TempDir\\questions.csv", true, ",");
+        List<List<String>> listOfAnswers = readFromFile("D:\\TempDir\\answers.csv", true, ",");
+        List<List<String>> listOfComments = readFromFile("D:\\TempDir\\comments.csv", true, ",");
+        List<List<String>> listOfOldVotes = readFromFile("D:\\TempDir\\votes.csv", false, ",");
+        List<List<String>> listOfSlugs = readFromFile(fileNameOfSlugs, false, "/");
 
         String queryTopic = "SELECT * FROM topics";
         String queryQu = "SELECT * FROM questions";
@@ -120,12 +123,12 @@ public class ReadDB {
                 ArrayList<Integer> dbIndex = new ArrayList<>();
                 ArrayList<String> dbName = new ArrayList();
 
-                dbName.add("qs_to_topic"); dbIndex.add(171);
-                dbName.add("topics");  dbIndex.add(51);
-                dbName.add("comments"); dbIndex.add(74);
-                dbName.add("answers"); dbIndex.add(93);
-                dbName.add("questions"); dbIndex.add(73);
-                dbName.add("fos_user"); dbIndex.add(36);
+                dbName.add("qs_to_topic"); dbIndex.add(0);
+                dbName.add("topics");  dbIndex.add(0);
+                dbName.add("comments"); dbIndex.add(0);
+                dbName.add("answers"); dbIndex.add(0);
+                dbName.add("questions"); dbIndex.add(0);
+                dbName.add("fos_user"); dbIndex.add(0);
 
 
 
@@ -138,16 +141,24 @@ public class ReadDB {
                 if(file.delete()){
                     System.out.println(fileNameOfQuestionRel + " файл удален");
                 }else System.out.println("Файла" + fileNameOfQuestionRel + " не обнаружено");
+
                 file = new File(fileNameOfAnswerRel + ".csv");
                 if(file.delete()){
                     System.out.println(fileNameOfAnswerRel + " файл удален");
                 }else System.out.println("Файла" + fileNameOfAnswerRel + " не обнаружено");
+
                 file = new File(fileNameOfTopicRel + ".csv");
-                if(file.delete()){
+                if (file.delete()){
                     System.out.println(fileNameOfTopicRel + " файл удален");
                 }else System.out.println("Файла" + fileNameOfTopicRel + " не обнаружено");
 
+                file = new File(fileNameOfCommentRel + ".csv");
+                if (file.delete()){
+                    System.out.println(fileNameOfCommentRel + " файл удален");
+                }else System.out.println("Файла" + fileNameOfCommentRel + " не обнаружено");
+
             }
+            System.out.println("Start migration...");
 
             Slugify slg = new Slugify();
             int numberOfUser = 0;
@@ -190,28 +201,36 @@ public class ReadDB {
                 progressBar(numberOfUser, email);
 
             }
-            System.out.println("\n\nFinished to convert the users\n=== === === === ===\n=== === === === ===\n");
+            System.out.println("\nFinished to convert the users\n=== === === === ===");
+            List<List<String>> list_Old_New_Id_U = ReadDB.readFromFile(fileNameOfUserRel, false, ",");
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка вопросов
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             System.out.println("\nStart to convert the questions");
+            String insertSQLQuestions = "INSERT IGNORE INTO questions (userid,title,content,slug,status,mailme,segment,created,updated)" +
+                    "VALUES (?,?,?,?,?,'1','en',?,?)";
+
             for (List<String> line : listOfQuestions) {
-                String slug = slg.slugify(line.get(27)); // слаг для топика
-                int endIndexSlug = slug.length();
-                int slugIncLength = Integer.toString(slugInc).length();
-                if ((endIndexSlug + slugIncLength) > 30) {
-                    slug = slug.substring(0, 30 - slugIncLength) + slugInc;
-                } else {
-                    slug = slug + slugInc;
-                }
                 slugInc++;
-                String insertSQLQuestions = "INSERT IGNORE INTO questions (userid,title,content,slug,status,mailme,segment,created,updated)" +
-                        "VALUES (?,?,?,?,'active','1','en',?,?)";
-                if (line.get(11).contains("null")) {
-                    continue;
+                String owner_id = line.get(11);
+                if (owner_id.contains("null")) {
+                    owner_id = "207394";//mustafa;
                 }
-                String userIdFromFOS_user = line.get(11);
+                String oldIDOfQuestion = line.get(0);
+                String status = "active";
+                if (line.get(1).toLowerCase().contains("hidden")){
+                    status = "hidden";
+                }
+                String slug = oldIDOfQuestion; // слаг для топика
+                for (List<String> lineWithSlug : listOfSlugs) {
+                    if (lineWithSlug.get(3).equals(oldIDOfQuestion)) {
+                        slug = lineWithSlug.get(4);
+                        break;
+                    }
+                }
+                String userIdFromFOS_user = owner_id;
                 String currentQueryIdOwner = queryIdOwner + userIdFromFOS_user;
                 rs = stmt.executeQuery(currentQueryIdOwner);
                 Boolean stateOfLine = rs.next();
@@ -240,23 +259,26 @@ public class ReadDB {
                 statement.setString(2, title);
                 statement.setString(3, content);
                 statement.setString(4, slug);
-                statement.setString(5, created);
-                statement.setString(6, updated);
+                statement.setString(5, status);
+                statement.setString(6, created);
+                statement.setString(7, updated);
                 int affectedRow = statement.executeUpdate();
                 if (affectedRow == 0) {
-                    System.out.println("Создание строки не удалось - ");
+                    System.out.println("/nСоздание строки не удалось - " + slugInc+ " " + slug);
                 } else {
                     receiveIDinNewDB(line, statement);
                     saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfQuestionRel);
                 }
-                progressBar(slugInc,title);
+                progressBar(slugInc,slug);
             }
+            List<List<String>> list_Old_New_Id_Q = readFromFile(fileNameOfQuestionRel, false,",");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //вставка ответов
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             slugInc=0;
             System.out.println("\nStart to convert the answers");
-            List<List<String>> list_Old_New_Id_Q = readFromFile(fileNameOfQuestionRel, false);
+
             for (List<String> line : listOfAnswers) {
                 String slug = getMySlug(slugInc, slg, line);
                 slugInc++;
@@ -291,8 +313,8 @@ public class ReadDB {
                     updated = created;
                 }
                 String insertSQLAnswers = "INSERT INTO answers " +
-                        "(qsid,userid,content,slug,mailme,created,updated)" +
-                        "VALUES (?,?,?,?,'0',?,?)";
+                        "(qsid,userid,content,slug,mailme,created,updated,status)" +
+                        "VALUES (?,?,?,?,'0',?,?,'active')";
                 PreparedStatement statement = con.prepareStatement(insertSQLAnswers, Statement.RETURN_GENERATED_KEYS);
                 statement.setString(1, qsId);
                 statement.setString(2, userId);
@@ -309,13 +331,13 @@ public class ReadDB {
                 }
                 progressBar(slugInc,slug);
             }
-
+            List<List<String>> list_Old_New_Id_A = readFromFile(fileNameOfAnswerRel, false,",");
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка комментариев
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            List<List<String>> list_Old_New_Id_A = readFromFile(fileNameOfAnswerRel, false);
-            insertCommentsInNewDB(queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A,fileNameOfCommentRel);
 
+            insertCommentsInNewDB(queryIdOwner, listOfComments, list_Old_New_Id_Q, list_Old_New_Id_A,fileNameOfCommentRel);
+            List<List<String>> list_Old_New_Id_C = readFromFile(fileNameOfCommentRel, false, ",");
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,15 +345,12 @@ public class ReadDB {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка votes
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            List<List<String>> list_Old_New_Id_C = readFromFile(fileNameOfCommentRel, false);
-            InsertVotes.insertVote(list_Old_New_Id_Q,
+
+   /*         InsertVotes.insertVote(
+                    list_Old_New_Id_Q,
                     list_Old_New_Id_A,
                     list_Old_New_Id_C,
-                    listOfUsers,
-                    fileNameOfVoteRel);
-
-
-
+                    list_Old_New_Id_U);*/
 
 // конец блока вставок в базу ////////////////////////////////////////////////////////// ///////////////////////////
 
@@ -501,19 +520,18 @@ public class ReadDB {
         return new String(text);
     }
 
-    public static List<List<String>> readFromFile(String fileName, Boolean isEncoded) throws IOException {
+    public static List<List<String>> readFromFile(String fileName, Boolean isEncoded, String delimeter) throws IOException {
         List<List<String>> listOfItems;
         if (!fileName.substring(fileName.length() - 4, fileName.length()).contains("csv")) {
             fileName = fileName + ".csv";
         }
-        listOfItems = Files.lines(Paths.get(fileName), StandardCharsets.UTF_8).map(line -> parseLine(line, isEncoded)).collect(toList());
+        listOfItems = Files.lines(Paths.get(fileName), StandardCharsets.UTF_8).map(line -> parseLine(line, isEncoded, delimeter)).collect(toList());
         return listOfItems;
     }
 
-    private static List<String> parseLine(String line, Boolean isEncoded) {
+    private static List<String> parseLine(String line, Boolean isEncoded, String delimeter) {
         List list = new ArrayList();
         String[] subStr;
-        String delimeter = ","; // Разделитель
         subStr = line.split(delimeter);
         for (String str : subStr) {
             if (isEncoded) {

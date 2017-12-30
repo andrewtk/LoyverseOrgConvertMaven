@@ -76,9 +76,12 @@ public class SaveDataFromLorg {
                 "loggedin," +
                 "written" +
                 " FROM qa_users WHERE sellerid IS NOT NULL ";
-        String queryVotes = "SELECT " +
+        String queryVotes = /*"SELECT " +
                 "postid,userid,vote " +
-                "FROM qa_uservotes";
+                "FROM qa_uservotes";*/
+        "SELECT vote.postid,post.type,vote.userid,vote.vote\n" +
+                "FROM qa_uservotes vote\n" +
+                "  LEFT JOIN qa_posts post ON vote.postid = post.postid";
         String queryFavorites = "SELECT * " +
                 " FROM qa_userfavorites";
         String fileNameTopicRel = "D:\\Tempdir\\" + "oldNewIdTopicRel";
@@ -101,11 +104,11 @@ public class SaveDataFromLorg {
                 saveToFile(id, topic);
                 progressBar(id);
             }
-            System.out.println("File is saved");
+            System.out.println("\nFile is saved");
 
 // выгрузка таблицы юзеров
             rs = stmt.executeQuery(queryUsers);
-            System.out.println("Save data of Users in file about Users...");
+            System.out.println("\nSave data of Users in file about Users...");
             int i = 0;
             while (rs.next()) {
                 saveToFileUsers(rs);
