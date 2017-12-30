@@ -106,9 +106,7 @@ public class ReadDB {
         int slugInc = 0;
         String queryIdOwner = "SELECT fos_user.id FROM fos_user WHERE fos_user.userid = ";
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// вставляем юзеров из файла в новую базу
-///////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         try {
             System.out.println("\nConnecting to a selected database...");
@@ -159,7 +157,9 @@ public class ReadDB {
 
             }
             System.out.println("Start migration...");
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// вставляем юзеров из файла в новую базу
+///////////////////////////////////////////////////////////////////////////////////////////////////
             Slugify slg = new Slugify();
             int numberOfUser = 0;
             for (List<String> line : listOfUsers) {
@@ -207,13 +207,13 @@ public class ReadDB {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка вопросов
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             System.out.println("\nStart to convert the questions");
             String insertSQLQuestions = "INSERT IGNORE INTO questions (userid,title,content,slug,status,mailme,segment,created,updated)" +
                     "VALUES (?,?,?,?,?,'1','en',?,?)";
 
             for (List<String> line : listOfQuestions) {
-                slugInc++;
+                slugInc++; // счетчик для количества записей
                 String owner_id = line.get(11);
                 if (owner_id.contains("null")) {
                     owner_id = "207394";//mustafa;
@@ -282,14 +282,15 @@ public class ReadDB {
             for (List<String> line : listOfAnswers) {
                 String slug = getMySlug(slugInc, slg, line);
                 slugInc++;
+                String userId;
                 if (line.get(11).contains("null")) { //11-userId
                     continue;
                 }
                 String userIdFromFOS_user = line.get(11);
+                //формируем запрос в новую БД для получения списка ответов к текущему вопросу
                 String currentQueryIdOwner = queryIdOwner + userIdFromFOS_user;
                 rs = stmt.executeQuery(currentQueryIdOwner);
                 Boolean stateOfLine = rs.next();
-                String userId;
                 if (stateOfLine) {
                     userId = rs.getString(1);//получить новый айди (ID) торговца из таблицы fos_user
                 } else {
@@ -298,7 +299,7 @@ public class ReadDB {
                 if (userId.contains("null")) {
                     continue;
                 }
-                String oldParentId_from_qa_post = line.get(2);//parentId from qa_post
+                String oldParentId_from_qa_post = line.get(2);//parentId from qa_post ссылка на вопрос в старой БД
                 String qsId = takeNewIdFromFile(oldParentId_from_qa_post, list_Old_New_Id_Q);
                 if (qsId.contains("-1")) {
                     continue;
@@ -312,9 +313,14 @@ public class ReadDB {
                 if (updated.contains("null")) {
                     updated = created;
                 }
+                String status = "active";
+                if (line.get(1).toLowerCase().contains("hidden")) {
+                    status = "hidden";
+                }
+
                 String insertSQLAnswers = "INSERT INTO answers " +
                         "(qsid,userid,content,slug,mailme,created,updated,status)" +
-                        "VALUES (?,?,?,?,'0',?,?,'active')";
+                        "VALUES (?,?,?,?,'0',?,?,?)";
                 PreparedStatement statement = con.prepareStatement(insertSQLAnswers, Statement.RETURN_GENERATED_KEYS);
                 statement.setString(1, qsId);
                 statement.setString(2, userId);
@@ -322,9 +328,11 @@ public class ReadDB {
                 statement.setString(4, slug);
                 statement.setString(5, created);
                 statement.setString(6, updated);
+                statement.setString(7, status);
                 int affectedRow = statement.executeUpdate();
+
                 if (affectedRow == 0) {
-                    System.out.println("Создание строки не удалось - userId " + userId);
+                    System.out.println("\nСоздание строки не удалось - userId " + userId + slug);
                 } else {
                     receiveIDinNewDB(line, statement);
                     saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfAnswerRel);
@@ -394,12 +402,12 @@ public class ReadDB {
         for (List<String> line : listOfComments) {
             myCounter++;
             String userIdFromFOS_user = line.get(11);
-            String currentQueryIdOwner = queryIdOwner + userIdFromFOS_user;
+            String currentQueryIdOwner = queryIdOwner + userIdFromFOS_user;//запрос к новой базе с выборков всех связанных комментарием к текущему вопросу
             rs = stmt.executeQuery(currentQueryIdOwner);
             Boolean stateOfLine = rs.next();
             String userId;
             if (stateOfLine) {
-                userId = rs.getString(1);//получить новый айди (ID) торговца из таблицы fos_user
+                userId = rs.getString(1);//получить (ID) торговца из новой БД, таблица fos_user
             } else {
                 userId = null;
             }
@@ -433,19 +441,14 @@ public class ReadDB {
             statement.setString(6, updated);
             int affectedRow = statement.executeUpdate();
             if (affectedRow == 0) {
-                String data = "\r" + anim.charAt(myCounter % anim.length()) + " не была добавлена строка " + myCounter;
-                try {
-                    System.out.write(data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                //System.out.println("\nСоздание строки не удалось - userId " + userId);
+                int lengthContent = content.length();
+                if (lengthContent>10) lengthContent = 10;
+                System.out.println("\nДобавление комментария не удалось - " + myCounter + " " +  content.substring(0,lengthContent));
             } else {
                 receiveIDinNewDB(line, statement);
-                saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfCommentRel);
-
+                saveToFileTableOfRelation(line.get(0), line.get(line.size() - 1), fileNameOfCommentRel);//записываем в файл айди из старой БД и из новой БД
             }
-            progressBar(myCounter, " comment");
+            progressBar(myCounter, " старый userID " + userId );
         }
     }
 
