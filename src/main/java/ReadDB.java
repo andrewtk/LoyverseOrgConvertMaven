@@ -283,7 +283,7 @@ public class ReadDB {
                 String slug = getMySlug(slugInc, slg, line);
                 slugInc++;
                 String userId;
-                if (line.get(11).contains("null")) { //11-userId
+                if (line.get(11).contains("null") || line.get(1).contains("HIDDEN")) { //11-userId, 1-type
                     continue;
                 }
                 String userIdFromFOS_user = line.get(11);
@@ -349,6 +349,7 @@ public class ReadDB {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка тем - топиков
 ////////////////////////////////////////////////////////////////////////////////
+            System.out.println("\nStart to convert the topics");
             InsertTopics.insertTopics(listOfTopics, list_Old_New_Id_Q, fileNameOfTopicRel);
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // вставка votes
@@ -400,6 +401,9 @@ public class ReadDB {
         String anim = "|/-\\";
         int myCounter = 0;
         for (List<String> line : listOfComments) {
+             if (line.get(11).contains("null") || line.get(1).contains("HIDDEN")) { //11-userId, 1-type
+                    continue;
+                }
             myCounter++;
             String userIdFromFOS_user = line.get(11);
             String currentQueryIdOwner = queryIdOwner + userIdFromFOS_user;//запрос к новой базе с выборков всех связанных комментарием к текущему вопросу

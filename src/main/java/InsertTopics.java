@@ -17,13 +17,10 @@ public class InsertTopics {
     private static Connection con;
     private static Statement stmt;
     private static ResultSet resultSetQueryPOST_TOPIC;
-
     private static Connection con2;
     private static Statement stmt2;
 
-
     public static void main(String args[]) throws IOException {
-
         String fileNameOfQuestionRel = "D:\\Tempdir\\" + "old_New_Id_Questions";
         String fileNameOfAnswerRel = "D:\\Tempdir\\" + "old_new_Id_Answers";
         String fileNameOfTopicRel = "D:\\Tempdir\\" + "old_new_Id_Topic";
@@ -38,7 +35,7 @@ public class InsertTopics {
             System.out.println("Connected database successfully...");
             stmt = con.createStatement();
             System.out.println("Очищаем бд от старых данных");
-            String deleteLines = "delete from topics Where id>76";
+            String deleteLines = "delete from topics Where id>=0";
             stmt.executeUpdate(deleteLines);
 
             insertTopics(listOfTopic, listOfIDQuestions, fileNameOfTopicRel);
@@ -58,7 +55,6 @@ public class InsertTopics {
             } catch (SQLException se) { }*/
         }
     }
-
     /**
      * метод вставки тем в новую базу со связками
      *
@@ -79,13 +75,11 @@ public class InsertTopics {
                 "  LEFT JOIN qa_posts ON qa_posttags.postid = qa_posts.postid" +
                 " WHERE topic IS NOT NULL and qa_posts.postid is not NULL and qa_posts.type like \"%Q%\" AND qa_topics.id=";
         String insertSQL_qs_to_topic = "INSERT INTO qs_to_topic (tpid, qsid) VALUES (?,?)";
-
         try {
             con = DriverManager.getConnection(url, user, password);
             con2 = DriverManager.getConnection(urlLORG2, userLORG2, passwordLORG2);
             stmt = con.createStatement();
             stmt2 = con2.createStatement();
-
             for (List<String> line : listOfTopic) {
                 String insertSQLTopic = "INSERT IGNORE INTO topics (topic, content, slug, cropic, segment,created,updated)" +
                         "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'en','2017-11-11 11:11:11','2017-11-11 11:11:11')";
@@ -117,7 +111,6 @@ public class InsertTopics {
                     if (affectedRowNewTable == 0) {
                         System.out.println("/nСоздание записи в таблице 'qs_to_topic' не удалось " + newTopicID + topic);
                     }
-
                 }
                 try {
                     resultSetQueryPOST_TOPIC.close();
@@ -136,12 +129,8 @@ public class InsertTopics {
                 stmt2.close();
             } catch (SQLException se) {
             }
-
-
         }
-
         System.out.println("\n Работа программы окончена");
-
     }
 }
 
