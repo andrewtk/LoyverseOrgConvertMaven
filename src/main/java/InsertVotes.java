@@ -1,4 +1,10 @@
-import com.github.slugify.Slugify;
+import static DBnewLogrExtra.tables.Votes.*;
+import DBnewLogrExtra.tables.records.VotesRecord;
+import org.jooq.*;
+import org.jooq.impl.DSL;
+import org.jooq.types.UInteger;
+import org.jooq.types.UShort;
+
 
 import java.io.IOException;
 import java.sql.*;
@@ -6,21 +12,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+
 public class InsertVotes {
-    private static final String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
+    private static final String url = "jdbc:mysql://localhost:3306/DBlorg?autoReconnect=true&useSSL=false";
     private static final String user = "root";
     private static final String password = "root";
 
-    private static final String urlLORG2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
+    private static final String urlLORG2 = "jdbc:mysql://localhost:3306/DBnewLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
     private static Connection con;
     private static Statement stmt;
     private static ResultSet resultSet;
-
     private static Connection con2;
     private static Statement stmt2;
-
 
     public static void main(String args[]) throws IOException {
 
@@ -36,6 +41,48 @@ public class InsertVotes {
         List<List<String>> list_Old_New_Id_A = ReadDB.readFromFile(fileNameOfAnswerRel, false, ",");
         List<List<String>> list_Old_New_Id_C = ReadDB.readFromFile(fileNameOfCommentRel, false, ",");
         List<List<String>> list_Old_New_Id_U = ReadDB.readFromFile(fileNameOfUserRel, false, ",");
+// learn Jooq -------------------------------------------------------------------------------------------------------
+        String userName = "root";
+        String password = "root";
+        String url = "jdbc:mysql://localhost:3306/lorg";
+        String urlNew = "jdbc:mysql://localhost:3306/newlogrExtra";
+
+        try (Connection conn = DriverManager.getConnection(url, userName, password)) {
+            DSLContext db = DSL.using(conn, SQLDialect.MYSQL);
+            try (Connection conn2 = DriverManager.getConnection(urlNew, userName, password)) {
+                DSLContext dbNew = DSL.using(conn2, SQLDialect.MYSQL);
+                Result<DBlorg.tables.records.QaPostsRecord> posts = db.selectFrom(DBlorg.tables.QaPosts.QA_POSTS).fetch();
+                for (DBlorg.tables.records.QaPostsRecord post : posts) {
+                    UInteger postId = post.getPostid();
+                    String type = post.getType().toString();
+                    VotesRecord newRecord = new VotesRecord();
+                    if (type.equals("Q")){
+                        String newQsId = ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_Q);
+                        newRecord.setQsid(Integer.valueOf(newQsId));
+                    } else if (type.equals("A")){
+                        String newAnwId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_A);
+                        newRecord.setAnswid(Integer.valueOf(newAnwId));
+                    } else if (type.equals("C")){
+                        String newComId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_C);
+                        newRecord.setComid(Integer.valueOf(newComId));
+                    } else continue;
+                    newRecord.setUpvotes(post.getUpvotes().intValue());
+                    newRecord.setDownvotes(post.getDownvotes().intValue());
+                    newRecord.setBalance(post.getNetvotes().intValue());
+                    dbNew.insertInto(VOTES).set(newRecord).execute();
+                }
+            }
+
+            // For the sake of this tutorial, let's keep exception handling simple
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        // For the sake of this tutorial, let's keep exception handling simple
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        //----------------------------------------------------------------------------------------------------------
         try {
             insertVote(
                     list_Old_New_Id_Q,
@@ -105,6 +152,7 @@ public class InsertVotes {
             PreparedStatement insertStatement_User_to_Vote = con2.prepareStatement(insertSQLUserToVote);
             resultSet = stmt.executeQuery(queryUniqPostID);
             List<String> listOfOldUserID = new ArrayList();
+
 
             while (resultSet.next()) {
                 listOfOldUserID.add(resultSet.getString(1));

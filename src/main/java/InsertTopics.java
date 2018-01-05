@@ -7,11 +7,11 @@ import java.util.List;
 
 
 public class InsertTopics {
-    private static final String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
+    private static final String url = "jdbc:mysql://localhost:3306/DBlorg?autoReconnect=true&useSSL=false";
     private static final String user = "root";
     private static final String password = "root";
 
-    private static final String urlLORG2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
+    private static final String urlLORG2 = "jdbc:mysql://localhost:3306/DBnewLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
     private static Connection con;

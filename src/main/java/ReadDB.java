@@ -46,7 +46,7 @@ import static java.util.stream.Collectors.toList;
  */
 public class ReadDB {
     // JDBC URL, username and password of MySQL server
-    private static final String url2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
+    private static final String url2 = "jdbc:mysql://localhost:3306/DBnewLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
 

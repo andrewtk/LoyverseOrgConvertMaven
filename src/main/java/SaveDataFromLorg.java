@@ -7,7 +7,7 @@ import java.util.Base64;
 
 public class SaveDataFromLorg {
     // JDBC URL, username and password of MySQL server
-    private static final String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
+    private static final String url = "jdbc:mysql://localhost:3306/DBlorg?autoReconnect=true&useSSL=false";
     private static final String user = "root";
     private static final String password = "root";
 
