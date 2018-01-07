@@ -46,7 +46,7 @@ import static java.util.stream.Collectors.toList;
  */
 public class ReadDB {
     // JDBC URL, username and password of MySQL server
-    private static final String url2 = "jdbc:mysql://localhost:3306/DBnewLogrExtra?autoReconnect=true&useSSL=false";
+    private static final String url2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
 
@@ -121,13 +121,14 @@ public class ReadDB {
                 ArrayList<Integer> dbIndex = new ArrayList<>();
                 ArrayList<String> dbName = new ArrayList();
 
+                dbName.add("votes"); dbIndex.add(0);
                 dbName.add("qs_to_topic"); dbIndex.add(0);
                 dbName.add("topics");  dbIndex.add(0);
                 dbName.add("comments"); dbIndex.add(0);
                 dbName.add("answers"); dbIndex.add(0);
                 dbName.add("questions"); dbIndex.add(0);
                 dbName.add("fos_user"); dbIndex.add(0);
-                dbName.add("votes"); dbIndex.add(0);
+
                 dbName.add("user_to_votes"); dbIndex.add(0);
 
 
