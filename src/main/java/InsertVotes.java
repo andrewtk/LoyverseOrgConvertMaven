@@ -1,4 +1,7 @@
-import static DBnewLogrExtra.tables.Votes.*;
+import static DBnewLogrExtra.Tables.*;
+import static DBlorg.Tables.*;
+import DBlorg.tables.records.QaUservotesRecord;
+import DBnewLogrExtra.tables.records.UserToVotesRecord;
 import DBnewLogrExtra.tables.records.VotesRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -53,24 +56,53 @@ public class InsertVotes {
                 DSLContext dbNew = DSL.using(conn2, SQLDialect.MYSQL);
                 Result<DBlorg.tables.records.QaPostsRecord> posts = db.selectFrom(DBlorg.tables.QaPosts.QA_POSTS).fetch();
                 for (DBlorg.tables.records.QaPostsRecord post : posts) {
+                    String newQsId="",newAnwId="", newComId="";
                     UInteger postId = post.getPostid();
                     String type = post.getType().toString();
+                    //выбрать все голоса по данному посту от всех юзеров
+                    Result<QaUservotesRecord> useridForPost = db.selectFrom(QA_USERVOTES).where(QA_USERVOTES.POSTID.eq(postId)).fetch();
+                    //заполняем таблицы votes u user_to_votes
+                    UserToVotesRecord userToVotesRecord = new UserToVotesRecord();
                     VotesRecord newRecord = new VotesRecord();
                     if (type.equals("Q")){
-                        String newQsId = ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_Q);
+                        newQsId = ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_Q);
                         newRecord.setQsid(Integer.valueOf(newQsId));
                     } else if (type.equals("A")){
-                        String newAnwId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_A);
+                        newAnwId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_A);
                         newRecord.setAnswid(Integer.valueOf(newAnwId));
                     } else if (type.equals("C")){
-                        String newComId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_C);
+                        newComId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_C);
                         newRecord.setComid(Integer.valueOf(newComId));
                     } else continue;
                     newRecord.setUpvotes(post.getUpvotes().intValue());
                     newRecord.setDownvotes(post.getDownvotes().intValue());
                     newRecord.setBalance(post.getNetvotes().intValue());
                     dbNew.insertInto(VOTES).set(newRecord).execute();
+
+                    //заполнение новой таблицы для текущего postID
+                    for (QaUservotesRecord uTVRecord:useridForPost) {
+                        String userID = uTVRecord.getUserid();
+                        Byte vote = uTVRecord.getVote();
+                        userToVotesRecord.setType("zero");
+                        if (vote==1) {
+                            userToVotesRecord.setType("upvote");
+                        } else if (vote==-1){
+                            userToVotesRecord.setType("downvote");
+                        }
+                        String newUsId = ReadDB.takeNewIdFromFile(userID, list_Old_New_Id_U);
+                        userToVotesRecord.setUsid(Integer.valueOf(newUsId));
+                        if (type.equals("Q")){
+                            userToVotesRecord.setQsid(Integer.valueOf(newQsId));
+                        } else if (type.equals("A")){
+                            userToVotesRecord.setAnswid(Integer.valueOf(newAnwId));
+                        } else if (type.equals("C")){
+                            userToVotesRecord.setComid(Integer.valueOf(newComId));
+                        } else continue;
+                        dbNew.insertInto(USER_TO_VOTES).set(uTVRecord).execute();
+                    }
                 }
+                //выгрузка голосов в таблицу votes из qa_uservotes
+
             }
 
             // For the sake of this tutorial, let's keep exception handling simple
@@ -83,7 +115,7 @@ public class InsertVotes {
             e.printStackTrace();
         }
         //----------------------------------------------------------------------------------------------------------
-        try {
+        /*try {
             insertVote(
                     list_Old_New_Id_Q,
                     list_Old_New_Id_A,
@@ -94,7 +126,7 @@ public class InsertVotes {
             e.printStackTrace();
         }
 
-        /*
+
 
         try {
             System.out.println("\nConnecting to a selected database...");

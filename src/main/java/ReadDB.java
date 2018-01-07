@@ -127,6 +127,8 @@ public class ReadDB {
                 dbName.add("answers"); dbIndex.add(0);
                 dbName.add("questions"); dbIndex.add(0);
                 dbName.add("fos_user"); dbIndex.add(0);
+                dbName.add("votes"); dbIndex.add(0);
+                dbName.add("user_to_votes"); dbIndex.add(0);
 
 
 
