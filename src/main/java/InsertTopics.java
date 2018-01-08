@@ -35,7 +35,9 @@ public class InsertTopics {
             System.out.println("Connected database successfully...");
             stmt = con.createStatement();
             System.out.println("Очищаем бд от старых данных");
-            String deleteLines = "delete from topics Where id>=0";
+            String deleteLines = "delete from qs_to_topic Where id>=0";
+            stmt.executeUpdate(deleteLines);
+            deleteLines = "delete from topics Where id>=0";
             stmt.executeUpdate(deleteLines);
 
             insertTopics(listOfTopic, listOfIDQuestions, fileNameOfTopicRel);
@@ -73,7 +75,7 @@ public class InsertTopics {
                 "  LEFT JOIN qa_topics ON topic = word" +
                 "  LEFT JOIN qa_posttags ON qa_words.wordid = qa_posttags.wordid" +
                 "  LEFT JOIN qa_posts ON qa_posttags.postid = qa_posts.postid" +
-                " WHERE topic IS NOT NULL and qa_posts.postid is not NULL and qa_posts.type like \"%Q%\" AND qa_topics.id=";
+                " WHERE topic IS NOT NULL and qa_posts.postid is not NULL and qa_posts.type like \"Q\" AND qa_topics.id=";
         String insertSQL_qs_to_topic = "INSERT INTO qs_to_topic (tpid, qsid) VALUES (?,?)";
         try {
             con = DriverManager.getConnection(url, user, password);
@@ -107,9 +109,10 @@ public class InsertTopics {
                     String newQuestionID = ReadDB.takeNewIdFromFile(postID, listOfIDQuestions);
                     insertStatement.setString(1, newTopicID);
                     insertStatement.setString(2, newQuestionID);
+                    ReadDB.progressBar(Integer.valueOf(newTopicID), " топик " + topic );
                     int affectedRowNewTable = insertStatement.executeUpdate();
                     if (affectedRowNewTable == 0) {
-                        System.out.println("/nСоздание записи в таблице 'qs_to_topic' не удалось " + newTopicID + topic);
+                        System.out.println("/nСоздание записи в таблице 'qs_to_topic' не удалось " + newTopicID + " " + topic);
                     }
                 }
                 try {
