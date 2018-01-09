@@ -160,6 +160,9 @@ public class SaveDataFromLorg {
                 rs.close();
             } catch (SQLException se) { /*can't do anything */ }
         }
+//выгрузка аватаров из базы.
+        ReadFileAvtrFromDB.saveAvatars();
+
     }
 
     public static void progressBar(int i) {

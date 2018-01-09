@@ -17,11 +17,11 @@ import java.util.List;
 
 
 public class InsertVotes {
-    private static final String url = "jdbc:mysql://localhost:3306/DBlorg?autoReconnect=true&useSSL=false";
+    private static final String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
     private static final String user = "root";
     private static final String password = "root";
 
-    private static final String urlLORG2 = "jdbc:mysql://localhost:3306/DBnewLogrExtra?autoReconnect=true&useSSL=false";
+    private static final String urlLORG2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
     private static Connection con;
@@ -76,7 +76,7 @@ public class InsertVotes {
                     newRecord.setDownvotes(post.getDownvotes().intValue());
                     newRecord.setBalance(post.getNetvotes().intValue());
                     dbNew.insertInto(VOTES).set(newRecord).execute();
-                    ReadDB.progressBar(postId, " votes ");
+                    ReadDB.progressBar(postId.intValue(), " votes ");
 
                     ArrayList<UserToVotesRecord> listFor_user_to_votes = new ArrayList<>();
                     //выбрать все голоса по данному посту от всех юзеров
