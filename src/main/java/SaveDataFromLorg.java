@@ -65,7 +65,7 @@ public class SaveDataFromLorg {
                 "content," +        //28
                 "name," +           //29
                 "notify" +          //30
-                " FROM qa_posts WHERE userid IS NOT NULL";
+                " FROM qa_posts ";
 
         String queryUsers = "SELECT " +
                 "userid," +
@@ -120,7 +120,7 @@ public class SaveDataFromLorg {
 
 //выгрузка таблицы сообщений
             rs = stmt.executeQuery(queryPost);
-            System.out.println("\nНачинаем записть данных в файл сообщений");
+            System.out.println("\nНачинаем запись данных в файл сообщений");
             i = 1;
             while (rs.next()) {
                 saveToFilePost(rs);
@@ -200,6 +200,11 @@ public class SaveDataFromLorg {
         }
     }
 
+    /**
+     *
+     * @param rs строка считанная из базы миграции из конкретной таблицы
+     * @throws SQLException
+     */
     private static void saveToFilePost(ResultSet rs) throws SQLException {
         int columnsTotal = rs.getMetaData().getColumnCount();
         // определяем объект для каталога
@@ -210,19 +215,25 @@ public class SaveDataFromLorg {
         //определяем вопрос, ответ или комментарий
         String quAnCm = rs.getString(2);
         String fileNameQAC;
-        if (quAnCm.contains("Q")) {
+        if (quAnCm.equals("Q")) {
             fileNameQAC = "questions";
         } else if (quAnCm.contains("A")) {
             fileNameQAC = "answers";
         } else if (quAnCm.contains("C")) {
             fileNameQAC = "comments";
         } else return;
+
         File fileName = new File(fileNameQAC);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(dir + File.separator + fileName.getName() + ".csv", true))) {
             String line = "";
+            /**
+             * перебор всех полей в полученной строке и запись в текстовом виде в файл в виде сsv
+             */
             for (int i = 1; i <= columnsTotal; i++) {
                 String essence = rs.getString(i);
-                if (essence == null) {
+                if (essence == null && i==12) {//если i=12 (userid) = null, то присвоить
+                    essence = "207394"; //эккаунт userid 207394 - mustafasethalilov@gmail.com искусственный экаунт созданный для подмены
+                } else {
                     essence = "null";
                 }
                 byte[] lineCoded = essence.getBytes("UTF-8");

@@ -85,7 +85,7 @@
                 <configuration>
                     <jdbc>
                         <driver>com.mysql.jdbc.Driver</driver>
-                        <url>jdbc:mysql://localhost:3306/DBnewLogrExtra</url>
+                        <url>jdbc:mysql://localhost:3306/lorg</url>
                         <user>root</user>
                         <password>root</password>
                     </jdbc>

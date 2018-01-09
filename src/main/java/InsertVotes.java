@@ -59,10 +59,8 @@ public class InsertVotes {
                     String newQsId="",newAnwId="", newComId="";
                     UInteger postId = post.getPostid();
                     String type = post.getType().toString();
-                    //выбрать все голоса по данному посту от всех юзеров
-                    Result<QaUservotesRecord> useridForPost = db.selectFrom(QA_USERVOTES).where(QA_USERVOTES.POSTID.eq(postId)).fetch();
-                    //заполняем таблицы votes u user_to_votes
-                    UserToVotesRecord userToVotesRecord = new UserToVotesRecord();
+
+                    //заполняем таблицы votes
                     VotesRecord newRecord = new VotesRecord();
                     if (type.equals("Q")){
                         newQsId = ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_Q);
@@ -78,9 +76,15 @@ public class InsertVotes {
                     newRecord.setDownvotes(post.getDownvotes().intValue());
                     newRecord.setBalance(post.getNetvotes().intValue());
                     dbNew.insertInto(VOTES).set(newRecord).execute();
+                    ReadDB.progressBar(postId, " votes ");
 
+                    ArrayList<UserToVotesRecord> listFor_user_to_votes = new ArrayList<>();
+                    //выбрать все голоса по данному посту от всех юзеров
+                    Result<QaUservotesRecord> useridForPost = db.selectFrom(QA_USERVOTES).where(QA_USERVOTES.POSTID.eq(postId)).fetch();
                     //заполнение новой таблицы для текущего postID
                     for (QaUservotesRecord uTVRecord:useridForPost) {
+                        //заполняем таблицы votes u user_to_votes
+                        UserToVotesRecord userToVotesRecord = new UserToVotesRecord();
                         String userID = uTVRecord.getUserid();
                         Byte vote = uTVRecord.getVote();
                         userToVotesRecord.setType("zero");
@@ -90,6 +94,9 @@ public class InsertVotes {
                             userToVotesRecord.setType("downvote");
                         }
                         String newUsId = ReadDB.takeNewIdFromFile(userID, list_Old_New_Id_U);
+                        if (newUsId.equals("-1")) {
+                            newUsId = ReadDB.takeNewIdFromFile("207394", list_Old_New_Id_U); //эккаунт userid 207394 - mustafasethalilov@gmail.com искусственный экаунт созданный для подмены
+                        }
                         userToVotesRecord.setUsid(Integer.valueOf(newUsId));
                         if (type.equals("Q")){
                             userToVotesRecord.setQsid(Integer.valueOf(newQsId));
@@ -98,8 +105,10 @@ public class InsertVotes {
                         } else if (type.equals("C")){
                             userToVotesRecord.setComid(Integer.valueOf(newComId));
                         } else continue;
-                        dbNew.insertInto(USER_TO_VOTES).set(uTVRecord).execute();
+                        listFor_user_to_votes.add(userToVotesRecord);
+
                     }
+                    dbNew.batchInsert(listFor_user_to_votes).execute();
                 }
                 //выгрузка голосов в таблицу votes из qa_uservotes
 
@@ -145,13 +154,13 @@ public class InsertVotes {
             //close connection ,stmt and resultset here
             try {
                 con.close();
-            } catch (SQLException se) { *//*can't do anything*//* }
+            } catch (SQLException se) { }
             try {
                 stmt.close();
-            } catch (SQLException se) { *//*can't do anything*//* }
+            } catch (SQLException se) { }
          *//* try {
                 resultSetQueryPOST_TOPIC.close();
-            } catch (SQLException se) { }*//*
+            } catch (SQLException se) { }/*
         }*/
     }
 
