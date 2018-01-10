@@ -180,7 +180,7 @@ public class ReadDB {
                 Random rnd = new Random();
                 String password = String.valueOf(generateString(rnd, "QWERTYUIOPqwertyuiopASDDFGHJKLasdfghjkl", 40));
                 String avatarblobid = line.get(8);
-                String cropic = "default.jpg";
+                String cropic = "default.jpeg";
                 if (!avatarblobid.equals("null")) {
                     cropic = avatarblobid + ".jpg";
                 }
