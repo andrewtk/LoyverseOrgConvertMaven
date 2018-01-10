@@ -83,8 +83,8 @@ public class InsertTopics {
             stmt = con.createStatement();
             stmt2 = con2.createStatement();
             for (List<String> line : listOfTopic) {
-                String insertSQLTopic = "INSERT IGNORE INTO topics (topic, content, slug, cropic, segment,created,updated)" +
-                        "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'en','2017-11-11 11:11:11','2017-11-11 11:11:11')";
+                String insertSQLTopic = "INSERT IGNORE INTO topics (topic, content, slug, cropic, segment,created,updated,status)" +
+                        "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'en','2017-11-11 11:11:11','2017-11-11 11:11:11','active')";
                 PreparedStatement statement = con2.prepareStatement(insertSQLTopic, Statement.RETURN_GENERATED_KEYS);
                 PreparedStatement insertStatement = con2.prepareStatement(insertSQL_qs_to_topic);
                 String topic = line.get(1);

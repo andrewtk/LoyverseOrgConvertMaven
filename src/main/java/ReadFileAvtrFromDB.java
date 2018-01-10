@@ -8,6 +8,7 @@ import DBnewLogrExtra.tables.records.VotesRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
+import org.jooq.types.ULong;
 import org.jooq.types.UShort;
 
 
@@ -50,6 +51,7 @@ public class ReadFileAvtrFromDB {
             Result<QaBlobsRecord> avatars = db.selectFrom(QA_BLOBS).fetch();
             for (QaBlobsRecord avatar:avatars) {
                 String userID = avatar.getUserid();
+                ULong blobID = avatar.getBlobid();
                 if (userID!=null){
                     byte[] content = avatar.getContent();
                     saveToFile(content,userID);

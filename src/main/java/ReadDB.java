@@ -101,7 +101,6 @@ public class ReadDB {
                 /*13 roles */    "'a:0:{}'," +
                 /*14 is Owner*/  "?," + //10
                 /*15 password*/  "?" +   //11
-
                 " )";
         int slugInc = 0;
         String queryIdOwner = "SELECT fos_user.id FROM fos_user WHERE fos_user.userid = ";
@@ -173,6 +172,7 @@ public class ReadDB {
                 String last_login = line.get(6);
                 String userId = line.get(0);
                 String owner_id = line.get(1);
+                String cropic = line.get(0)+".jpg";
                 if (owner_id.contains("null")) {
                     continue;
                 }
@@ -191,6 +191,7 @@ public class ReadDB {
                 statement.setString(8, owner_id);
                 statement.setString(9, slug);
                 statement.setString(10, is_owner);
+                statement.setString(12, cropic);
 
                 int affectedRow = statement.executeUpdate();
                 if (affectedRow == 0) {
