@@ -84,7 +84,7 @@ public class ReadDB {
         String insertTopics = "INSERT INTO topics (topic, content, slug, cropic, segment)" +
                 "VALUES (?,'here need short explanation about topic',?,'default_topic.jpeg', 'eng')";
         String insertSQLUsers = "INSERT  INTO fos_user (username, username_canonical,email, email_canonical," +
-                "enabled, last_login, userId,owner_id, localize, slug, status, cropic, roles, is_owner, password) " +
+                "enabled, last_login, userId,owner_id, localize, slug, status,  roles, is_owner, password,cropic) " +
                 " VALUES (" +
                 /*1  username*/  "?," + //1
                 /*2  usm_cncl*/  "?," + //2
@@ -97,10 +97,10 @@ public class ReadDB {
                 /*9  localize*/  "'en'," +
                 /*10 slug*/      "?," + //9
                 /*11 status*/    "'Active'," +
-                /*12 cropic*/    "'default.jpeg'," +
                 /*13 roles */    "'a:0:{}'," +
                 /*14 is Owner*/  "?," + //10
-                /*15 password*/  "?" +   //11
+                /*15 password*/  "?," +   //11
+                /*12 cropic*/    "?" +//12
                 " )";
         int slugInc = 0;
         String queryIdOwner = "SELECT fos_user.id FROM fos_user WHERE fos_user.userid = ";
@@ -172,7 +172,6 @@ public class ReadDB {
                 String last_login = line.get(6);
                 String userId = line.get(0);
                 String owner_id = line.get(1);
-                String cropic = line.get(0)+".jpg";
                 if (owner_id.contains("null")) {
                     continue;
                 }
@@ -180,7 +179,11 @@ public class ReadDB {
                 String enabled = "1";
                 Random rnd = new Random();
                 String password = String.valueOf(generateString(rnd, "QWERTYUIOPqwertyuiopASDDFGHJKLasdfghjkl", 40));
-                statement.setString(11, password);
+                String avatarblobid = line.get(8);
+                String cropic = "default.jpg";
+                if (!avatarblobid.equals("null")) {
+                    cropic = avatarblobid + ".jpg";
+                }
                 statement.setString(1, line.get(5));
                 statement.setString(2, name_canonical);
                 statement.setString(3, email);
@@ -191,6 +194,7 @@ public class ReadDB {
                 statement.setString(8, owner_id);
                 statement.setString(9, slug);
                 statement.setString(10, is_owner);
+                statement.setString(11, password);
                 statement.setString(12, cropic);
 
                 int affectedRow = statement.executeUpdate();
@@ -219,15 +223,16 @@ public class ReadDB {
             for (List<String> line : listOfQuestions) {
                 slugInc++; // счетчик для количества записей
                 String owner_id = line.get(11);
-                if (owner_id.contains("null")) {
-                    owner_id = "207394";//mustafa;
+                if (owner_id.contains("null")||owner_id.equals("")) {
+                    owner_id = "207394";//mustafa - пользователь из старой базы;
                 }
                 String oldIDOfQuestion = line.get(0);
                 String status = "active";
                 if (line.get(1).toLowerCase().contains("hidden")){
                     status = "hidden";
                 }
-                String slug = oldIDOfQuestion; // слаг для топика
+                String slug = oldIDOfQuestion; // слаг для вопроса по умолчанию
+                //обрабатываем слаги полученные из sitemap по старому айди вопроса.
                 for (List<String> lineWithSlug : listOfSlugs) {
                     if (lineWithSlug.get(3).equals(oldIDOfQuestion)) {
                         slug = lineWithSlug.get(4);
@@ -369,6 +374,7 @@ public class ReadDB {
 
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
+            System.out.println(slugInc+ " insertSQLUsers:" + insertSQLUsers);
         } finally {
             //close connection ,stmt and resultset here
             try {

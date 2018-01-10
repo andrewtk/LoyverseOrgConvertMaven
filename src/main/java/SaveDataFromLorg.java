@@ -8,7 +8,6 @@ import java.util.Base64;
 public class SaveDataFromLorg {
     // JDBC URL, username and password of MySQL server
     private static final String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
-    private static final String url2 = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
     private static final String user = "root";
     private static final String password = "root";
 
@@ -75,7 +74,8 @@ public class SaveDataFromLorg {
                 "email," +
                 "handle," +
                 "loggedin," +
-                "written" +
+                "written," +
+                "avatarblobid"+
                 " FROM qa_users WHERE sellerid IS NOT NULL ";
         String queryVotes = /*"SELECT " +
                 "postid,userid,vote " +
@@ -105,6 +105,7 @@ public class SaveDataFromLorg {
                 saveToFile(id, topic);
                 progressBar(id);
             }
+
             System.out.println("\nFile is saved");
 
 // выгрузка таблицы юзеров
@@ -236,7 +237,7 @@ public class SaveDataFromLorg {
                 String essence = rs.getString(i);
                 if (essence == null && i==12) {//если i=12 (userid) = null, то присвоить
                     essence = "207394"; //эккаунт userid 207394 - mustafasethalilov@gmail.com искусственный экаунт созданный для подмены
-                } else {
+                } else if (essence == null){
                     essence = "null";
                 }
                 byte[] lineCoded = essence.getBytes("UTF-8");

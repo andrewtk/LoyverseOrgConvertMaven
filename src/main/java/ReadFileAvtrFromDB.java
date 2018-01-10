@@ -43,7 +43,7 @@ public class ReadFileAvtrFromDB {
         String userName = "root";
         String password = "root";
         String url = "jdbc:mysql://localhost:3306/lorg";
-        String urlNew = "jdbc:mysql://localhost:3306/newlogrExtra";
+        String urlNew = "jdbc:mysql://localhost:3306/newLogrExtra";
         System.out.println("\nConnecting to a selected database...");
         try (Connection conn = DriverManager.getConnection(url, userName, password)) {
             DSLContext db = DSL.using(conn, SQLDialect.MYSQL);
@@ -54,7 +54,7 @@ public class ReadFileAvtrFromDB {
                 ULong blobID = avatar.getBlobid();
                 if (userID!=null){
                     byte[] content = avatar.getContent();
-                    saveToFile(content,userID);
+                    saveToFile(content,blobID.toString());
                 }
 
 
