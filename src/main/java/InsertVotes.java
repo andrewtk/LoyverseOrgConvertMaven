@@ -6,15 +6,9 @@ import DBnewLogrExtra.tables.records.VotesRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
-import org.jooq.types.UShort;
-
-
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-
 
 public class InsertVotes {
     private static final String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
@@ -24,31 +18,22 @@ public class InsertVotes {
     private static final String urlLORG2 = "jdbc:mysql://localhost:3306/newLogrExtra?autoReconnect=true&useSSL=false";
     private static final String userLORG2 = "root";
     private static final String passwordLORG2 = "root";
-    private static Connection con;
-    private static Statement stmt;
-    private static ResultSet resultSet;
-    private static Connection con2;
-    private static Statement stmt2;
 
-    public static void main(String args[]) throws IOException {
 
-        String fileNameOfQuestionRel = "D:\\TempDir\\" + "old_New_Id_Questions";
-        String fileNameOfAnswerRel = "D:\\TempDir\\" + "old_new_Id_Answers";
-        String fileNameOfTopicRel = "D:\\TempDir\\" + "old_new_Id_Topics";
-        String fileNameOfCommentRel = "D:\\TempDir\\" + "old_new_Id_Comments";
-        String fileNameOfVoteRel = "D:\\TempDir\\" + "old_new_Id_Votes";
-        String fileNameOfUserRel = "D:\\TempDir\\" + "old_new_Id_Users";
-        String fileNameOfSlugs = "D:\\TempDir\\" + "slugs.txt";
+    public static void main(String args[]) {
+        insertVote();
+    }
 
-        List<List<String>> list_Old_New_Id_Q = ReadDB.readFromFile(fileNameOfQuestionRel, false, ",");
-        List<List<String>> list_Old_New_Id_A = ReadDB.readFromFile(fileNameOfAnswerRel, false, ",");
-        List<List<String>> list_Old_New_Id_C = ReadDB.readFromFile(fileNameOfCommentRel, false, ",");
-        List<List<String>> list_Old_New_Id_U = ReadDB.readFromFile(fileNameOfUserRel, false, ",");
+    public static void insertVote(List<List<String>> list_Old_New_Id_Q,
+                                  List<List<String>> list_Old_New_Id_A,
+                                  List<List<String>> list_Old_New_Id_C,
+                                  List<List<String>> list_Old_New_Id_U) {
+
 // learn Jooq -------------------------------------------------------------------------------------------------------
         String userName = "root";
         String password = "root";
-        String url = "jdbc:mysql://localhost:3306/lorg";
-        String urlNew = "jdbc:mysql://localhost:3306/newlogrExtra";
+        String url = "jdbc:mysql://localhost:3306/lorg?autoReconnect=true&useSSL=false";
+        String urlNew = "jdbc:mysql://localhost:3306/newlogrExtra?autoReconnect=true&useSSL=false";
 
         try (Connection conn = DriverManager.getConnection(url, userName, password)) {
             DSLContext db = DSL.using(conn, SQLDialect.MYSQL);
@@ -56,20 +41,20 @@ public class InsertVotes {
                 DSLContext dbNew = DSL.using(conn2, SQLDialect.MYSQL);
                 Result<DBlorg.tables.records.QaPostsRecord> posts = db.selectFrom(DBlorg.tables.QaPosts.QA_POSTS).fetch();
                 for (DBlorg.tables.records.QaPostsRecord post : posts) {
-                    String newQsId="",newAnwId="", newComId="";
+                    String newQsId = "", newAnwId = "", newComId = "";
                     UInteger postId = post.getPostid();
                     String type = post.getType().toString();
 
                     //заполняем таблицы votes
                     VotesRecord newRecord = new VotesRecord();
-                    if (type.equals("Q")){
-                        newQsId = ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_Q);
+                    if (type.equals("Q")) {
+                        newQsId = ReadDB.takeNewIdFromFile(postId.toString(), list_Old_New_Id_Q);
                         newRecord.setQsid(Integer.valueOf(newQsId));
-                    } else if (type.equals("A")){
-                        newAnwId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_A);
+                    } else if (type.equals("A")) {
+                        newAnwId = ReadDB.takeNewIdFromFile(postId.toString(), list_Old_New_Id_A);
                         newRecord.setAnswid(Integer.valueOf(newAnwId));
-                    } else if (type.equals("C")){
-                        newComId =  ReadDB.takeNewIdFromFile(postId.toString(),list_Old_New_Id_C);
+                    } else if (type.equals("C")) {
+                        newComId = ReadDB.takeNewIdFromFile(postId.toString(), list_Old_New_Id_C);
                         newRecord.setComid(Integer.valueOf(newComId));
                     } else continue;
                     newRecord.setUpvotes(post.getUpvotes().intValue());
@@ -82,15 +67,15 @@ public class InsertVotes {
                     //выбрать все голоса по данному посту от всех юзеров
                     Result<QaUservotesRecord> useridForPost = db.selectFrom(QA_USERVOTES).where(QA_USERVOTES.POSTID.eq(postId)).fetch();
                     //заполнение новой таблицы для текущего postID
-                    for (QaUservotesRecord uTVRecord:useridForPost) {
+                    for (QaUservotesRecord uTVRecord : useridForPost) {
                         //заполняем таблицы votes u user_to_votes
                         UserToVotesRecord userToVotesRecord = new UserToVotesRecord();
                         String userID = uTVRecord.getUserid();
                         Byte vote = uTVRecord.getVote();
                         userToVotesRecord.setType("zero");
-                        if (vote==1) {
+                        if (vote == 1) {
                             userToVotesRecord.setType("upvote");
-                        } else if (vote==-1){
+                        } else if (vote == -1) {
                             userToVotesRecord.setType("downvote");
                         }
                         String newUsId = ReadDB.takeNewIdFromFile(userID, list_Old_New_Id_U);
@@ -98,11 +83,11 @@ public class InsertVotes {
                             newUsId = ReadDB.takeNewIdFromFile("207394", list_Old_New_Id_U); //эккаунт userid 207394 - mustafasethalilov@gmail.com искусственный экаунт созданный для подмены
                         }
                         userToVotesRecord.setUsid(Integer.valueOf(newUsId));
-                        if (type.equals("Q")){
+                        if (type.equals("Q")) {
                             userToVotesRecord.setQsid(Integer.valueOf(newQsId));
-                        } else if (type.equals("A")){
+                        } else if (type.equals("A")) {
                             userToVotesRecord.setAnswid(Integer.valueOf(newAnwId));
-                        } else if (type.equals("C")){
+                        } else if (type.equals("C")) {
                             userToVotesRecord.setComid(Integer.valueOf(newComId));
                         } else continue;
                         listFor_user_to_votes.add(userToVotesRecord);
@@ -111,9 +96,7 @@ public class InsertVotes {
                     dbNew.batchInsert(listFor_user_to_votes).execute();
                 }
                 //выгрузка голосов в таблицу votes из qa_uservotes
-
             }
-
             // For the sake of this tutorial, let's keep exception handling simple
             catch (Exception e) {
                 e.printStackTrace();
@@ -124,48 +107,10 @@ public class InsertVotes {
             e.printStackTrace();
         }
         //----------------------------------------------------------------------------------------------------------
-        /*try {
-            insertVote(
-                    list_Old_New_Id_Q,
-                    list_Old_New_Id_A,
-                    list_Old_New_Id_C,
-                    list_Old_New_Id_U
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-
-
-        try {
-            System.out.println("\nConnecting to a selected database...");
-            con = DriverManager.getConnection(urlLORG2, userLORG2, passwordLORG2);
-            System.out.println("Connected database successfully...");
-            stmt = con.createStatement();
-            System.out.println("Очищаем бд от старых данных");
-            String deleteLines = "delete from topics Where id>76";
-            stmt.executeUpdate(deleteLines);
-
-
-
-        } catch (SQLException sqlEx) {
-            sqlEx.printStackTrace();
-        } finally {
-            //close connection ,stmt and resultset here
-            try {
-                con.close();
-            } catch (SQLException se) { }
-            try {
-                stmt.close();
-            } catch (SQLException se) { }
-         *//* try {
-                resultSetQueryPOST_TOPIC.close();
-            } catch (SQLException se) { }/*
-        }*/
     }
 
 
-    public static void insertVote(List<List<String>> listOfQuestions,
+  /*  public static void insertVote(List<List<String>> listOfQuestions,
                                   List<List<String>> listOfAnswers,
                                   List<List<String>> listOfComments,
                                   List<List<String>> listOfUsers
@@ -260,7 +205,6 @@ public class InsertVotes {
                     if (affectedRowNewTable == 0) {
                         System.out.println("Создание записи в таблице 'votes' не удалось " + newQuestionID);
                     }
-
                 }
                 try {
                     resultSet.close();
@@ -284,7 +228,7 @@ public class InsertVotes {
 
         System.out.println("\n Работа программы окончена");
 
-    }
+    }*/
 }
 
 

@@ -55,12 +55,19 @@ public class ReadDB {
     private static Statement stmt;
     private static ResultSet rs;
 
+    private static String urlPicture = "https://s3.eu-central-1.amazonaws.com/devloyverseorg/pictures/";
+    private static final String oldUrl = "https://loyverse.org/?qa=blob&amp;qa_blobid=";
+
     public static void main(String args[]) throws IOException {
         //SaveDataFromLorg.saveDataFromLorg1();
         loadDataToLorg2();
+        
+        //LoadDataToLorgJooq.loadDataToLorgJooq();
     }
 
-//====================================================================================================================
+
+
+    //====================================================================================================================
     private static void loadDataToLorg2() throws IOException {
         String fileNameOfQuestionRel = "D:\\TempDir\\" + "old_New_Id_Questions";
         String fileNameOfAnswerRel = "D:\\TempDir\\" + "old_new_Id_Answers";
@@ -76,6 +83,7 @@ public class ReadDB {
         List<List<String>> listOfAnswers = readFromFile("D:\\TempDir\\answers.csv", true, ",");
         List<List<String>> listOfComments = readFromFile("D:\\TempDir\\comments.csv", true, ",");
         List<List<String>> listOfOldVotes = readFromFile("D:\\TempDir\\votes.csv", false, ",");
+
         List<List<String>> listOfSlugs = readFromFile(fileNameOfSlugs, false, "/");
 
         String queryTopic = "SELECT * FROM topics";
@@ -127,7 +135,6 @@ public class ReadDB {
                 dbName.add("answers"); dbIndex.add(0);
                 dbName.add("questions"); dbIndex.add(0);
                 dbName.add("fos_user"); dbIndex.add(0);
-
                 dbName.add("user_to_votes"); dbIndex.add(0);
 
 
@@ -253,6 +260,9 @@ public class ReadDB {
                 String userId = oldIdOwner; //connectToFOS_UserID(line.get(11), listOfUsers);
                 String title = line.get(27);
                 String content = line.get(28);
+                if (content.contains(oldUrl)){
+                    content = exchangeUrlInContent(content);
+                }
                 String created = line.get(24);
                 if (created.contains("null")) {
                     continue;
@@ -264,6 +274,7 @@ public class ReadDB {
                 if (userId.contains("null")) {
                     continue;
                 }
+
                 statement.setString(1, userId);
                 statement.setString(2, title);
                 statement.setString(3, content);
@@ -314,6 +325,9 @@ public class ReadDB {
                     continue;
                 }
                 String content = line.get(28);
+                 if (content.contains(oldUrl)){
+                     content = exchangeUrlInContent(content);
+                 }
                 String created = line.get(24);
                 if (created.contains("null")) {
                     continue;
@@ -364,11 +378,11 @@ public class ReadDB {
 // вставка votes
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   /*         InsertVotes.insertVote(
+            InsertVotes.insertVote(
                     list_Old_New_Id_Q,
                     list_Old_New_Id_A,
                     list_Old_New_Id_C,
-                    list_Old_New_Id_U);*/
+                    list_Old_New_Id_U);
 
 // конец блока вставок в базу ////////////////////////////////////////////////////////// ///////////////////////////
 
@@ -388,6 +402,12 @@ public class ReadDB {
             } catch (SQLException se) { /*can't do anything*/ }
         }
 
+    }
+
+    private static String exchangeUrlInContent(String content) {
+        String newContent = content.replace(oldUrl, urlPicture);
+        ExchangeLinks.exchangeIdToFileName(newContent);
+        return newContent;
     }
 
     public static void progressBar(int myCounter, String str) {
@@ -437,12 +457,14 @@ public class ReadDB {
             if (answerID == null & qsId == null & userId == null) {
                 continue;
             }
-            String content = line.get(28);
+            String content = exchangeUrlInContent(line.get(28));
+
             String created = line.get(24);
             String updated = line.get(25);
             if (updated.contains("null")) {
                 updated = created;
             }
+
             String insertSQLComments = "INSERT INTO comments " +
                     "(answid,qsid,comid,userid,content,depth,mailme,created,updated)" +
                     "VALUES (?,?,NULL,?,?,'1','0',?,?)";
