@@ -151,8 +151,9 @@ public class LoadDataToLorgJooq {
             String avatarblobid = line.get(8);
             String cropic = "default.jpeg";
             if (!avatarblobid.equals("null")) {
-                cropic = avatarblobid + ".jpg";
+                cropic = avatarblobid + ".jpeg";
             }
+
 
 
         }

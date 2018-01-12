@@ -128,6 +128,7 @@ public class ReadDB {
                 ArrayList<Integer> dbIndex = new ArrayList<>();
                 ArrayList<String> dbName = new ArrayList();
 
+                dbName.add("user_to_votes"); dbIndex.add(0);
                 dbName.add("votes"); dbIndex.add(0);
                 dbName.add("qs_to_topic"); dbIndex.add(0);
                 dbName.add("topics");  dbIndex.add(0);
@@ -135,7 +136,7 @@ public class ReadDB {
                 dbName.add("answers"); dbIndex.add(0);
                 dbName.add("questions"); dbIndex.add(0);
                 dbName.add("fos_user"); dbIndex.add(0);
-                dbName.add("user_to_votes"); dbIndex.add(0);
+
 
 
 
@@ -163,6 +164,11 @@ public class ReadDB {
                 if (file.delete()){
                     System.out.println(fileNameOfCommentRel + " файл удален");
                 }else System.out.println("Файла" + fileNameOfCommentRel + " не обнаружено");
+
+                file = new File(fileNameOfUserRel + ".csv");
+                if (file.delete()){
+                    System.out.println(fileNameOfUserRel + " файл удален");
+                }else System.out.println("Файла" + fileNameOfUserRel + " не обнаружено");
 
             }
             System.out.println("Start migration...");

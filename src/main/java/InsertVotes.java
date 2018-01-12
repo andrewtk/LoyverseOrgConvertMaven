@@ -6,6 +6,8 @@ import DBnewLogrExtra.tables.records.VotesRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
+
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +22,32 @@ public class InsertVotes {
     private static final String passwordLORG2 = "root";
 
 
-    public static void main(String args[]) {
-        insertVote();
+    public static void main(String args[]) throws IOException {
+        List<List<String>> listOfTopics = ReadDB.readFromFile("D:\\TempDir\\topic.csv", false, ",");
+        List<List<String>> listOfUsers = ReadDB.readFromFile("D:\\TempDir\\users.csv", false, ",");
+        List<List<String>> listOfQuestions = ReadDB.readFromFile("D:\\TempDir\\questions.csv", true, ",");
+        List<List<String>> listOfAnswers = ReadDB.readFromFile("D:\\TempDir\\answers.csv", true, ",");
+        List<List<String>> listOfComments = ReadDB.readFromFile("D:\\TempDir\\comments.csv", true, ",");
+        List<List<String>> listOfOldVotes = ReadDB.readFromFile("D:\\TempDir\\votes.csv", false, ",");
+
+        String fileNameOfQuestionRel = "D:\\TempDir\\" + "old_New_Id_Questions";
+        String fileNameOfAnswerRel = "D:\\TempDir\\" + "old_new_Id_Answers";
+        String fileNameOfTopicRel = "D:\\TempDir\\" + "old_new_Id_Topics";
+        String fileNameOfCommentRel = "D:\\TempDir\\" + "old_new_Id_Comments";
+        String fileNameOfVoteRel = "D:\\TempDir\\" + "old_new_Id_Votes";
+        String fileNameOfUserRel = "D:\\TempDir\\" + "old_new_Id_Users";
+        String fileNameOfSlugs = "D:\\TempDir\\" + "slugs.csv";
+
+
+        List<List<String>> list_Old_New_Id_U = ReadDB.readFromFile(fileNameOfUserRel, false, ",");
+        List<List<String>> list_Old_New_Id_A = ReadDB.readFromFile(fileNameOfAnswerRel, false,",");
+        List<List<String>> list_Old_New_Id_C = ReadDB.readFromFile(fileNameOfCommentRel, false, ",");
+        List<List<String>> list_Old_New_Id_Q = ReadDB.readFromFile(fileNameOfQuestionRel, false,",");
+
+        insertVote(list_Old_New_Id_Q,
+                list_Old_New_Id_A,
+                list_Old_New_Id_C,
+                list_Old_New_Id_U);
     }
 
     public static void insertVote(List<List<String>> list_Old_New_Id_Q,
@@ -49,12 +75,15 @@ public class InsertVotes {
                     VotesRecord newRecord = new VotesRecord();
                     if (type.equals("Q")) {
                         newQsId = ReadDB.takeNewIdFromFile(postId.toString(), list_Old_New_Id_Q);
+                        if (newQsId == "-1") continue; // если не нашли в списке, то следующая запись
                         newRecord.setQsid(Integer.valueOf(newQsId));
                     } else if (type.equals("A")) {
                         newAnwId = ReadDB.takeNewIdFromFile(postId.toString(), list_Old_New_Id_A);
+                        if (newAnwId == "-1") continue; // если не нашли в списке, то следующий
                         newRecord.setAnswid(Integer.valueOf(newAnwId));
                     } else if (type.equals("C")) {
                         newComId = ReadDB.takeNewIdFromFile(postId.toString(), list_Old_New_Id_C);
+                        if (newComId == "-1") continue;
                         newRecord.setComid(Integer.valueOf(newComId));
                     } else continue;
                     newRecord.setUpvotes(post.getUpvotes().intValue());
@@ -80,6 +109,7 @@ public class InsertVotes {
                         }
                         String newUsId = ReadDB.takeNewIdFromFile(userID, list_Old_New_Id_U);
                         if (newUsId.equals("-1")) {
+
                             newUsId = ReadDB.takeNewIdFromFile("207394", list_Old_New_Id_U); //эккаунт userid 207394 - mustafasethalilov@gmail.com искусственный экаунт созданный для подмены
                         }
                         userToVotesRecord.setUsid(Integer.valueOf(newUsId));
@@ -91,6 +121,7 @@ public class InsertVotes {
                             userToVotesRecord.setComid(Integer.valueOf(newComId));
                         } else continue;
                         listFor_user_to_votes.add(userToVotesRecord);
+                        //dbNew.insertInto(USER_TO_VOTES).set(userToVotesRecord).execute();
 
                     }
                     dbNew.batchInsert(listFor_user_to_votes).execute();

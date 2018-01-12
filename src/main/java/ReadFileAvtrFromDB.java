@@ -60,7 +60,7 @@ public class ReadFileAvtrFromDB {
                 byte[] content = avatar.getContent();
                 String dirFolder = "pictures";
                 if (fileName == null) {
-                    fileName = blobID.toString() + "." + format;
+                    fileName = blobID.toString() + ".jpeg";
                     dirFolder = "avatars";
                 }
                 saveToFile(content, fileName, dirFolder);
