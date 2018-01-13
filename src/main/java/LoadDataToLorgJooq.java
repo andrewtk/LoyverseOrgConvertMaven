@@ -1,5 +1,7 @@
 import DBnewLogrExtra.Tables;
+import DBnewLogrExtra.tables.FosUser;
 import DBnewLogrExtra.tables.Votes;
+import DBnewLogrExtra.tables.records.FosUserRecord;
 import com.github.slugify.Slugify;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -11,6 +13,8 @@ import org.jooq.impl.TableImpl;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -109,7 +113,7 @@ public class LoadDataToLorgJooq {
                 System.out.println("Start migration...");
 
 
-                loadUsers(listOfUsers);
+                loadUsers(listOfUsers, dbNew, fileNameOfUserRel);
                 loadQuestions();
                 loadAnswers();
                 loadComments();
@@ -128,22 +132,28 @@ public class LoadDataToLorgJooq {
 
     }
 
-    private static void loadUsers(List<List<String>> listOfUser) {
+    private static void loadUsers(List<List<String>> listOfUser, DSLContext dbNew , String fileName) throws ParseException {
         // убираем дубликаты имен
         listOfUser = removeDuplicate(listOfUser);
 
         Slugify slg = new Slugify();
         int numberOfUser = 0;
+        Integer newId;
         for (List<String> line : listOfUser) {
+            String oldId = line.get(0);
+            newId = -1;
             String slug = slg.slugify(line.get(5)); // слаг для ю3ера
-            String name_canonical = line.get(5).toLowerCase();
+            String name = line.get(5);
+            String name_canonical = name.toLowerCase();
             String email = line.get(4).toLowerCase();
             String last_login = line.get(6);
-            String userId = line.get(0);
+            SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+            int userId = Integer.parseInt(line.get(0));
             String owner_id = line.get(1);
             if (owner_id.contains("null")) {
                 continue;
             }
+            String roles = "a:0:{}";
             String is_owner = line.get(2);
             String enabled = "1";
             Random rnd = new Random();
@@ -153,11 +163,34 @@ public class LoadDataToLorgJooq {
             if (!avatarblobid.equals("null")) {
                 cropic = avatarblobid + ".jpeg";
             }
+            FosUserRecord theRecord = new FosUserRecord();
+            theRecord.setUsername(name);
+            theRecord.setUsernameCanonical(name_canonical);
+            theRecord.setEmail(email);
+            theRecord.setEmailCanonical(email);
+            theRecord.setEnabled(Byte.valueOf(enabled));
+            theRecord.setLastLogin(new Timestamp(format.parse(last_login).getTime()));
+            theRecord.setSlug(slug);
+            theRecord.setStatus("Active");
+            theRecord.setRoles(roles);
+            theRecord.setUserid(userId);
+            theRecord.setIsOwner(Byte.valueOf(is_owner));
+            theRecord.setPassword(password);
+            theRecord.setCropic(cropic);
+            FosUserRecord newRecord = dbNew.insertInto(FosUser.FOS_USER).set(theRecord).returning().fetchOne();
+            if (newRecord == null) {
+                System.out.println("\nзапись с почтой " + email + " не была вставлена ");
+            } else {
+                newId = newRecord.getId();
+                ReadDB.saveToFileTableOfRelation(oldId,newId.toString(),fileName);
 
+            }
 
+            numberOfUser++;
+            ReadDB.progressBar(numberOfUser,email);
 
         }
-
+        System.out.println("миграция users завершена");
 
     }
 

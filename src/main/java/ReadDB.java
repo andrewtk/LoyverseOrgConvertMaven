@@ -59,7 +59,7 @@ public class ReadDB {
     private static final String oldUrl = "https://loyverse.org/?qa=blob&amp;qa_blobid=";
 
     public static void main(String args[]) throws IOException {
-        //SaveDataFromLorg.saveDataFromLorg1();
+        SaveDataFromLorg.saveDataFromLorg1();
         loadDataToLorg2();
         
         //LoadDataToLorgJooq.loadDataToLorgJooq();
@@ -195,7 +195,7 @@ public class ReadDB {
                 String avatarblobid = line.get(8);
                 String cropic = "default.jpeg";
                 if (!avatarblobid.equals("null")) {
-                    cropic = avatarblobid + ".jpg";
+                    cropic = avatarblobid + ".jpeg";
                 }
                 statement.setString(1, line.get(5));
                 statement.setString(2, name_canonical);
